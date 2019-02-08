@@ -80,7 +80,13 @@
 				</MakeCommands>
 			</Target>
 		</Build>
+		<Unit filename="/Users/alex/usf_classes/2018-Spring/cs621/cs621-p1/lzw_compression.h">
+			<Option target="cs621-p1"/>
+		</Unit>
 		<Unit filename="/Users/alex/usf_classes/2018-Spring/cs621/cs621-p1/main.cpp">
+			<Option target="cs621-p1"/>
+		</Unit>
+		<Unit filename="/Users/alex/usf_classes/2018-Spring/cs621/cs621-p1/point-to-point-net-device.h">
 			<Option target="cs621-p1"/>
 		</Unit>
 		<Unit filename="/Users/alex/usf_classes/2018-Spring/cs621/cs621-p1/CMakeLists.txt">
