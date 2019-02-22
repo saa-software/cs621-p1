@@ -15,6 +15,9 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+#include <fstream>
+using namespace std;
+
 #include "ns3/log.h"
 #include "ns3/ipv4-address.h"
 #include "ns3/ipv6-address.h"
@@ -26,6 +29,7 @@
 #include "ns3/socket-factory.h"
 #include "ns3/packet.h"
 #include "ns3/uinteger.h"
+#include "ns3/boolean.h"
 #include "ns3/trace-source-accessor.h"
 #include "cda-client.h"
 
@@ -67,6 +71,10 @@ CdaClient::GetTypeId (void)
                    MakeUintegerAccessor (&CdaClient::SetDataSize,
                                          &CdaClient::GetDataSize),
                    MakeUintegerChecker<uint32_t> ())
+    .AddAttribute ("HighEntropyData", "If the packet data is high entropy",
+                   BooleanValue (false),
+                   MakeBooleanAccessor (&CdaClient::SetHighEntropyData),
+                   MakeBooleanChecker ())
     .AddTraceSource ("Tx", "A new packet is created and is sent",
                      MakeTraceSourceAccessor (&CdaClient::m_txTrace),
                      "ns3::Packet::TracedCallback")
@@ -91,6 +99,7 @@ CdaClient::CdaClient ()
   m_sendEvent = EventId ();
   m_data = 0;
   m_dataSize = 0;
+  m_highEntropyData = false;
 }
 
 CdaClient::~CdaClient()
@@ -293,6 +302,41 @@ CdaClient::SetFill (uint8_t *fill, uint32_t fillSize, uint32_t dataSize)
   // Overwrite packet size attribute.
   //
   m_size = dataSize;
+}
+
+void 
+CdaClient::SetHighEntropyData (bool entropy)
+{
+  NS_LOG_FUNCTION (this << entropy);
+  m_highEntropyData = entropy;
+  delete [] m_data;
+  m_data = new uint8_t [m_dataSize];
+  if (m_highEntropyData == true)
+    {
+      ifstream file;
+      file.open ("/dev/urandom", ios::in | ios::binary);
+      if (file.is_open ())
+        {
+          char c;
+          uint8_t j = 0;
+          while(j < m_dataSize)
+            {
+              file.get (c);
+              for (int i = 0; i < 8; i++)
+                {
+                  m_data[j]  = ((c >> i) & 1);
+                  j++;
+                }
+            }
+        }
+    } 
+  else 
+    {
+      for(uint8_t i = 0; i < m_dataSize; i++) 
+        {
+          m_data[i] = 0;
+        }
+    }   
 }
 
 void 

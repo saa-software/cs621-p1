@@ -130,6 +130,14 @@ public:
    */
   void SetFill (uint8_t *fill, uint32_t fillSize, uint32_t dataSize);
 
+  /**
+   * Set the entropy level for the packet.
+   * 
+   * \param entropy Whether or not the packet data is high entropy or not.
+   */
+  void SetHighEntropyData (bool entropy);
+
+
 protected:
   virtual void DoDispose (void);
 
@@ -163,6 +171,8 @@ private:
 
   uint32_t m_dataSize; //!< packet payload size (must be equal to m_size)
   uint8_t *m_data; //!< packet payload data
+
+  bool m_highEntropyData;
 
   uint32_t m_sent; //!< Counter for sent packets
   Ptr<Socket> m_socket; //!< Socket
