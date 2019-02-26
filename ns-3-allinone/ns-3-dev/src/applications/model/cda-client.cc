@@ -310,18 +310,20 @@ CdaClient::SetHighEntropyData (bool entropy)
   NS_LOG_FUNCTION (this << entropy);
   m_highEntropyData = entropy;
   delete [] m_data;
-  m_data = new uint8_t [m_dataSize];
-  if (m_highEntropyData == true)
+  m_data = new uint8_t [m_size];
+  m_dataSize = m_size;
+  if (entropy)
     {
       ifstream file;
       file.open ("/dev/urandom", ios::in | ios::binary);
       if (file.is_open ())
         {
           char c;
-          uint8_t j = 0;
-          while(j < m_dataSize)
+          uint32_t j = 0;
+          while(j < m_size)
             {
-              file.get (c);
+              c = file.get();
+              NS_LOG_FUNCTION (this << j);
               for (int i = 0; i < 8; i++)
                 {
                   m_data[j]  = ((c >> i) & 1);
@@ -332,7 +334,7 @@ CdaClient::SetHighEntropyData (bool entropy)
     } 
   else 
     {
-      for(uint8_t i = 0; i < m_dataSize; i++) 
+      for(uint32_t i = 0; i < m_size; i++) 
         {
           m_data[i] = 0;
         }
@@ -364,6 +366,7 @@ CdaClient::Send (void)
       //
       NS_ASSERT_MSG (m_dataSize == m_size, "CdaClient::Send(): m_size and m_dataSize inconsistent");
       NS_ASSERT_MSG (m_data, "CdaClient::Send(): m_dataSize but no m_data");
+      NS_LOG_FUNCTION (this << m_data);
       p = Create<Packet> (m_data, m_dataSize);
     }
   else

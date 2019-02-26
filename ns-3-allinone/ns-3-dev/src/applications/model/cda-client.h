@@ -172,7 +172,7 @@ private:
   uint32_t m_dataSize; //!< packet payload size (must be equal to m_size)
   uint8_t *m_data; //!< packet payload data
 
-  bool m_highEntropyData;
+  bool m_highEntropyData; //!< if we are sending high entropy data or not
 
   uint32_t m_sent; //!< Counter for sent packets
   Ptr<Socket> m_socket; //!< Socket
