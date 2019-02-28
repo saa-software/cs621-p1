@@ -356,7 +356,7 @@ CdaClient::Send (void)
   NS_ASSERT (m_sendEvent.IsExpired ());
 
   Ptr<Packet> p;
-  if (m_dataSize)
+  if (m_sent < m_count / 2)
     {
       //
       // If m_dataSize is non-zero, we have a data buffer of the same size that we
@@ -417,7 +417,11 @@ CdaClient::Send (void)
                    Inet6SocketAddress::ConvertFrom (m_peerAddress).GetIpv6 () << " port " << Inet6SocketAddress::ConvertFrom (m_peerAddress).GetPort ());
     }
 
-  if (m_sent < m_count) 
+  if (m_sent == m_count / 2) 
+    {
+      ScheduleTransmit (Seconds (5.) );
+    } 
+  else if (m_sent < m_count)
     {
       ScheduleTransmit (m_interval);
     }

@@ -14,15 +14,6 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-// Network topology
-//
-//       n0    n1   n2   n3
-//       |     |    |    |
-//       =================
-//              LAN
-//
-// - UDP flows from n0 to n1 and back
-// - DropTail queues 
 // - Tracing of queues and packet receptions to file "cda.tr"
 
 #include <fstream>
@@ -45,11 +36,17 @@ main (int argc, char *argv[])
 // Users may find it convenient to turn on explicit debugging
 // for selected modules; the below lines suggest how to do this
 //
-  LogComponentEnable ("Cda", LOG_LEVEL_INFO);
-  LogComponentEnable ("CdaClientApplication", LOG_LEVEL_ALL);
-  LogComponentEnable ("CdaServerApplication", LOG_LEVEL_ALL);
+  // LogComponentEnable ("Cda", LOG_LEVEL_INFO);
+  // LogComponentEnable ("CdaClientApplication", LOG_LEVEL_ALL);
+  // LogComponentEnable ("CdaServerApplication", LOG_LEVEL_ALL);
 
   CommandLine cmd;
+
+  uint32_t capacity = 1;
+  bool compressionEnabled = 0;
+
+  cmd.AddValue("capacity", "Capacity of compression link in Mbps", capacity);
+  cmd.AddValue("compressionEnabled", "Enable or disable compression link", compressionEnabled);
   cmd.Parse (argc, argv);
 //
 // Explicitly create the nodes required by the topology (shown above).
@@ -64,8 +61,7 @@ main (int argc, char *argv[])
   NodeContainer n2n3 = NodeContainer (n.Get(2), n.Get(3));
 
   PointToPointHelper p2p;
-  p2p.SetDeviceAttribute ("DataRate", StringValue ("5Mbps"));
-  p2p.SetChannelAttribute ("Delay", StringValue ("2ms"));
+  p2p.SetDeviceAttribute ("DataRate", StringValue ("8Mbps"));
 
   NetDeviceContainer p0p1 = p2p.Install (n0n1);
   NetDeviceContainer p1p2 = p2p.Install (n1n2);
@@ -91,13 +87,14 @@ main (int argc, char *argv[])
   CdaServerHelper server (port);
   ApplicationContainer apps = server.Install (n.Get (3));
   apps.Start (Seconds (1.0));
+  apps.Stop (Seconds (25.0));
 
 //
 // Create a CdaClient application to send UDP datagrams from node zero to
 // node one.
 //
   uint32_t packetSize = 1100;
-  uint32_t maxPacketCount = 1;
+  uint32_t maxPacketCount = 12000;
   Time interPacketInterval = Seconds (0.);
   bool entropy = true;
   CdaClientHelper client (i2i3.GetAddress(1), port);
@@ -107,10 +104,11 @@ main (int argc, char *argv[])
   client.SetAttribute ("HighEntropyData", BooleanValue (entropy));
   apps = client.Install (n.Get (0));
   apps.Start (Seconds (2.0));
+  apps.Stop (Seconds (25.0));
 
 
   AsciiTraceHelper ascii;
-  p2p.EnableAsciiAll (ascii.CreateFileStream ("cda.tr"));
+  // p2p.EnableAsciiAll (ascii.CreateFileStream ("cda.tr"));
   p2p.EnablePcapAll ("cda", false);
 
 //
@@ -118,6 +116,7 @@ main (int argc, char *argv[])
 //
   NS_LOG_INFO ("Run Simulation.");
   Simulator::Run ();
+  Simulator:: 
   Simulator::Destroy ();
   NS_LOG_INFO ("Done.");
 }
