@@ -364,9 +364,25 @@ CdaClient::Send (void)
       // the Fill functions is called.  In this case, m_size must have been set
       // to agree with m_dataSize
       //
-      NS_ASSERT_MSG (m_dataSize == m_size, "CdaClient::Send(): m_size and m_dataSize inconsistent");
-      NS_ASSERT_MSG (m_data, "CdaClient::Send(): m_dataSize but no m_data");
-      NS_LOG_FUNCTION (this << m_data);
+      delete [] m_data;
+      m_data = new uint8_t [m_size];
+      m_dataSize = m_size;
+      ifstream file;
+      file.open ("/dev/urandom", ios::in | ios::binary);
+      if (file.is_open ())
+        {
+          char c;
+          uint32_t j = 0;
+          while(j < m_size)
+            {
+              c = file.get();
+              for (int i = 0; i < 8; i++)
+                {
+                  m_data[j]  = ((c >> i) & 1);
+                  j++;
+                }
+            }
+        }
       p = Create<Packet> (m_data, m_dataSize);
     }
   else
@@ -419,7 +435,7 @@ CdaClient::Send (void)
 
   if (m_sent == m_count / 2) 
     {
-      ScheduleTransmit (Seconds (5.) );
+      ScheduleTransmit (Seconds (10.) );
     } 
   else if (m_sent < m_count)
     {

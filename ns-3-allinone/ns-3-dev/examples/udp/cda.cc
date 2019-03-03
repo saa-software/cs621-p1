@@ -96,7 +96,7 @@ main (int argc, char *argv[])
 // Create a CdaClient application to send UDP datagrams from node zero to
 // node one.
 //
-  uint32_t packetSize = 10;
+  uint32_t packetSize = 1100;
   uint32_t maxPacketCount = 12000;
   Time interPacketInterval = Seconds (0.1);
   bool entropy = true;
