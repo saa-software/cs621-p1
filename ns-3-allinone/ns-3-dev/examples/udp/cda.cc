@@ -83,11 +83,14 @@ main (int argc, char *argv[])
 //
 // Create a CdaServer application on node one.
 //
+
+  double start = 1.0;
+  double stop = 3000.0;
   uint16_t port = 9;  // well-known echo port number
   CdaServerHelper server (port);
   ApplicationContainer apps = server.Install (n.Get (3));
-  apps.Start (Seconds (1.0));
-  apps.Stop (Seconds (25.0));
+  apps.Start (Seconds (start));
+  apps.Stop (Seconds (stop));
 
 //
 // Create a CdaClient application to send UDP datagrams from node zero to
@@ -95,7 +98,7 @@ main (int argc, char *argv[])
 //
   uint32_t packetSize = 1100;
   uint32_t maxPacketCount = 12000;
-  Time interPacketInterval = Seconds (0.);
+  Time interPacketInterval = Seconds (0.1);
   bool entropy = true;
   CdaClientHelper client (i2i3.GetAddress(1), port);
   client.SetAttribute ("MaxPackets", UintegerValue (maxPacketCount));
@@ -103,8 +106,8 @@ main (int argc, char *argv[])
   client.SetAttribute ("PacketSize", UintegerValue (packetSize));
   client.SetAttribute ("HighEntropyData", BooleanValue (entropy));
   apps = client.Install (n.Get (0));
-  apps.Start (Seconds (2.0));
-  apps.Stop (Seconds (25.0));
+  apps.Start (Seconds (start));
+  apps.Stop (Seconds (stop));
 
 
   AsciiTraceHelper ascii;
