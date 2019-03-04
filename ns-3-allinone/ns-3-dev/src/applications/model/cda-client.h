@@ -86,57 +86,6 @@ public:
    */
   uint32_t GetDataSize (void) const;
 
-  /**
-   * Set the data fill of the packet (what is sent as data to the server) to 
-   * the zero-terminated contents of the fill string string.
-   *
-   * \warning The size of resulting echo packets will be automatically adjusted
-   * to reflect the size of the fill string -- this means that the PacketSize
-   * attribute may be changed as a result of this call.
-   *
-   * \param fill The string to use as the actual echo data bytes.
-   */
-  void SetFill (std::string fill);
-
-  /**
-   * Set the data fill of the packet (what is sent as data to the server) to 
-   * the repeated contents of the fill byte.  i.e., the fill byte will be 
-   * used to initialize the contents of the data packet.
-   * 
-   * \warning The size of resulting echo packets will be automatically adjusted
-   * to reflect the dataSize parameter -- this means that the PacketSize
-   * attribute may be changed as a result of this call.
-   *
-   * \param fill The byte to be repeated in constructing the packet data..
-   * \param dataSize The desired size of the resulting echo packet data.
-   */
-  void SetFill (uint8_t fill, uint32_t dataSize);
-
-  /**
-   * Set the data fill of the packet (what is sent as data to the server) to
-   * the contents of the fill buffer, repeated as many times as is required.
-   *
-   * Initializing the packet to the contents of a provided single buffer is 
-   * accomplished by setting the fillSize set to your desired dataSize
-   * (and providing an appropriate buffer).
-   *
-   * \warning The size of resulting echo packets will be automatically adjusted
-   * to reflect the dataSize parameter -- this means that the PacketSize
-   * attribute of the Application may be changed as a result of this call.
-   *
-   * \param fill The fill pattern to use when constructing packets.
-   * \param fillSize The number of bytes in the provided fill pattern.
-   * \param dataSize The desired size of the final echo data.
-   */
-  void SetFill (uint8_t *fill, uint32_t fillSize, uint32_t dataSize);
-
-  /**
-   * Set the entropy level for the packet.
-   * 
-   * \param entropy Whether or not the packet data is high entropy or not.
-   */
-  void SetHighEntropyData (bool entropy);
-
 
 protected:
   virtual void DoDispose (void);
@@ -171,8 +120,6 @@ private:
 
   uint32_t m_dataSize; //!< packet payload size (must be equal to m_size)
   uint8_t *m_data; //!< packet payload data
-
-  bool m_highEntropyData; //!< if we are sending high entropy data or not
 
   uint32_t m_sent; //!< Counter for sent packets
   Ptr<Socket> m_socket; //!< Socket

@@ -94,24 +94,6 @@ CdaClientHelper::SetAttribute (
   m_factory.Set (name, value);
 }
 
-void
-CdaClientHelper::SetFill (Ptr<Application> app, std::string fill)
-{
-  app->GetObject<CdaClient>()->SetFill (fill);
-}
-
-void
-CdaClientHelper::SetFill (Ptr<Application> app, uint8_t fill, uint32_t dataLength)
-{
-  app->GetObject<CdaClient>()->SetFill (fill, dataLength);
-}
-
-void
-CdaClientHelper::SetFill (Ptr<Application> app, uint8_t *fill, uint32_t fillLength, uint32_t dataLength)
-{
-  app->GetObject<CdaClient>()->SetFill (fill, fillLength, dataLength);
-}
-
 ApplicationContainer
 CdaClientHelper::Install (Ptr<Node> node) const
 {
