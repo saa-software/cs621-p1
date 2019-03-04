@@ -614,53 +614,53 @@ void
 PointToPointNetDevice::CompressPacket ()
 {
 
-  const char a[50] = "hello";
-  const char b[50] = {};
+  // const char a[50] = "hello";
+  // const char b[50] = {};
 
-  printf("a: %s", a);
-  printf("b: %s", b);
+  // printf("a: %s", a);
+  // printf("b: %s", b);
 
-  z_stream defstream;
-  defstream.zalloc = Z_NULL;
-  defstream.zfree = Z_NULL;
-  defstream.opaque = Z_NULL;
-  // setup "a" as the input and "b" as the compressed output
-  defstream.avail_in = (uInt)strlen(a)+1; // size of input, string + terminator
-  defstream.next_in = (Bytef *)a; // input char array
-  defstream.avail_out = (uInt)sizeof(b); // size of output
-  defstream.next_out = (Bytef *)b; // output char array
+  // z_stream defstream;
+  // defstream.zalloc = Z_NULL;
+  // defstream.zfree = Z_NULL;
+  // defstream.opaque = Z_NULL;
+  // // setup "a" as the input and "b" as the compressed output
+  // defstream.avail_in = (uInt)strlen(a)+1; // size of input, string + terminator
+  // defstream.next_in = (Bytef *)a; // input char array
+  // defstream.avail_out = (uInt)sizeof(b); // size of output
+  // defstream.next_out = (Bytef *)b; // output char array
 
-  // the actual compression work.
-  deflateInit(&defstream, Z_BEST_COMPRESSION);
-  deflate(&defstream, Z_FINISH);
-  deflateEnd(&defstream);
+  // // the actual compression work.
+  // deflateInit(&defstream, Z_BEST_COMPRESSION);
+  // deflate(&defstream, Z_FINISH);
+  // deflateEnd(&defstream);
 
-  printf("a: %s", a);
-  printf("b: %s", b);
+  // printf("a: %s", a);
+  // printf("b: %s", b);
 }
 
 void
 PointToPointNetDevice::DecompressPacket (Packet p)
 {
   
-  const char b[50] = {};
-  const char c[50] = {};
+  // const char b[50] = {};
+  // const char c[50] = {};
 
-  z_stream infstream;
-  infstream.zalloc = Z_NULL;
-  infstream.zfree = Z_NULL;
-  infstream.opaque = Z_NULL;
-  // setup "b" as the input and "c" as the compressed output
-  // infstream.avail_in = (uInt)((char*)defstream.next_out - b); // size of input
-  infstream.avail_in = 50;
-  infstream.next_in = (Bytef *)b; // input char array
-  infstream.avail_out = (uInt)sizeof(c); // size of output
-  infstream.next_out = (Bytef *)c; // output char array
+  // z_stream infstream;
+  // infstream.zalloc = Z_NULL;
+  // infstream.zfree = Z_NULL;
+  // infstream.opaque = Z_NULL;
+  // // setup "b" as the input and "c" as the compressed output
+  // // infstream.avail_in = (uInt)((char*)defstream.next_out - b); // size of input
+  // infstream.avail_in = 50;
+  // infstream.next_in = (Bytef *)b; // input char array
+  // infstream.avail_out = (uInt)sizeof(c); // size of output
+  // infstream.next_out = (Bytef *)c; // output char array
 
-  // the actual DE-compression work.
-  inflateInit(&infstream);
-  inflate(&infstream, Z_NO_FLUSH);
-  inflateEnd(&infstream);
+  // // the actual DE-compression work.
+  // inflateInit(&infstream);
+  // inflate(&infstream, Z_NO_FLUSH);
+  // inflateEnd(&infstream);
 }
 
 bool

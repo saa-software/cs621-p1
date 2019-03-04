@@ -1,9 +1,0 @@
-def configure(conf):
-    conf.env[‘ENABLE_zlib.h‘]=conf.check(
-        mandatory=True,
-        libpath=[‘zlib-1.2.11/‘],
-        includes=[‘zlib.h‘],
-        lib=’zlib‘,uselib_store=’ZLIB‘)
-
-def build(bld):
-    module.use.append(ZLIB)
