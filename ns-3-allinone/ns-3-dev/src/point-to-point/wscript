@@ -8,6 +8,7 @@ def build(bld):
         'model/point-to-point-channel.cc',
         'model/point-to-point-remote-channel.cc',
         'model/ppp-header.cc',
+        'model/comp-header.cc',
         'helper/point-to-point-helper.cc',
         ]
 
@@ -23,6 +24,7 @@ def build(bld):
         'model/point-to-point-channel.h',
         'model/point-to-point-remote-channel.h',
         'model/ppp-header.h',
+        'model/comp-header.h',
         'helper/point-to-point-helper.h',
         ]
 

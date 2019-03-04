@@ -28,6 +28,7 @@
 #include "point-to-point-net-device.h"
 #include "point-to-point-channel.h"
 #include "ppp-header.h"
+#include "comp-header.h"
 
 namespace ns3 {
 
@@ -533,6 +534,15 @@ PointToPointNetDevice::Send (
       m_macTxDropTrace (packet);
       return false;
     }
+
+  // if(m_compressionEnabled)
+  //   {
+      // PppHeader pppHeader;
+      // packet->RemoveHeader(pppHeader);
+      // CompHeader compHeader;
+      // compHeader.SetData(0x4021);
+      // packet->AddHeader(compHeader);
+    // }
 
   //
   // Stick a point to point protocol header on the packet in preparation for
