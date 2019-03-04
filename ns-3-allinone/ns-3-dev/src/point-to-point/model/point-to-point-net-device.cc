@@ -28,7 +28,7 @@
 #include "point-to-point-net-device.h"
 #include "point-to-point-channel.h"
 #include "ppp-header.h"
-#include "zlib-1.2.11/zlib.h"
+#include "zlib.h"
 
 namespace ns3 {
 
@@ -610,12 +610,15 @@ PointToPointNetDevice::SetPromiscReceiveCallback (NetDevice::PromiscReceiveCallb
   m_promiscCallback = cb;
 }
 
-Packet
-PointToPointNetDevice::CompressPacket (Packet p)
+void
+PointToPointNetDevice::CompressPacket ()
 {
 
   const char a[50] = "hello";
-  const char b[50];
+  const char b[50] = {};
+
+  printf("a: %s", a);
+  printf("b: %s", b);
 
   z_stream defstream;
   defstream.zalloc = Z_NULL;
@@ -631,14 +634,17 @@ PointToPointNetDevice::CompressPacket (Packet p)
   deflateInit(&defstream, Z_BEST_COMPRESSION);
   deflate(&defstream, Z_FINISH);
   deflateEnd(&defstream);
+
+  printf("a: %s", a);
+  printf("b: %s", b);
 }
 
-Packet
+void
 PointToPointNetDevice::DecompressPacket (Packet p)
 {
   
-  const char b[50];
-  const char c[50];
+  const char b[50] = {};
+  const char c[50] = {};
 
   z_stream infstream;
   infstream.zalloc = Z_NULL;
