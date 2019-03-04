@@ -38,7 +38,7 @@ main (int argc, char *argv[])
 //
   // LogComponentEnable ("Cda", LOG_LEVEL_INFO);
   // LogComponentEnable ("CdaClientApplication", LOG_LEVEL_ALL);
-  // LogComponentEnable ("CdaServerApplication", LOG_LEVEL_ALL);
+  LogComponentEnable ("CdaServerApplication", LOG_LEVEL_ALL);
 
   CommandLine cmd;
 
@@ -94,17 +94,15 @@ main (int argc, char *argv[])
 
 //
 // Create a CdaClient application to send UDP datagrams from node zero to
-// node one.
+// node three.
 //
   uint32_t packetSize = 1100;
   uint32_t maxPacketCount = 12000;
-  Time interPacketInterval = Seconds (0.1);
-  bool entropy = true;
+  Time interPacketInterval = MilliSeconds (1);
   CdaClientHelper client (i2i3.GetAddress(1), port);
   client.SetAttribute ("MaxPackets", UintegerValue (maxPacketCount));
   client.SetAttribute ("Interval", TimeValue (interPacketInterval));
   client.SetAttribute ("PacketSize", UintegerValue (packetSize));
-  client.SetAttribute ("HighEntropyData", BooleanValue (entropy));
   apps = client.Install (n.Get (0));
   apps.Start (Seconds (start));
   apps.Stop (Seconds (stop));

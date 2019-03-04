@@ -62,6 +62,12 @@ CdaServer::GetTypeId (void)
 CdaServer::CdaServer ()
 {
   NS_LOG_FUNCTION (this);
+  m_t1Start = 0.0;
+  m_t1End = 0.0;
+  m_t2Start = 0.0;
+  m_t2End = 0.0;
+  m_lastSentPacket = 0.0;
+  m_nPackets = 0;
 }
 
 CdaServer::~CdaServer()
@@ -69,6 +75,11 @@ CdaServer::~CdaServer()
   NS_LOG_FUNCTION (this);
   m_socket = 0;
   m_socket6 = 0;
+  m_t1Start = 0.0;
+  m_t1End = 0.0;
+  m_t2Start = 0.0;
+  m_t2End = 0.0;
+  m_lastSentPacket = 0.0;
 }
 
 void
@@ -150,12 +161,27 @@ CdaServer::StopApplication ()
       m_socket6->Close ();
       m_socket6->SetRecvCallback (MakeNullCallback<void, Ptr<Socket> > ());
     }
+
+    m_t2End = m_lastSentPacket;
+    double t1Time = fabs (m_t1Start - m_t1End);
+    double t2Time = fabs (m_t2Start - m_t2End);
+    double delta = fabs (t1Time - t2Time) * 1000;
+
+    NS_LOG_FUNCTION ("High Entropy Train Time = " << t1Time);
+    NS_LOG_FUNCTION ("Low Entropy Train Time = " << t2Time);
+    
+    if (delta > 100)
+    {
+      NS_LOG_FUNCTION ("Compression detected!");
+    } else {
+      NS_LOG_FUNCTION ("No compression was detected");
+    }
 }
 
 void 
 CdaServer::HandleRead (Ptr<Socket> socket)
 {
-  NS_LOG_FUNCTION (this << socket);
+  // NS_LOG_FUNCTION (this << socket);
 
   Ptr<Packet> packet;
   Address from;
@@ -165,37 +191,22 @@ CdaServer::HandleRead (Ptr<Socket> socket)
       socket->GetSockName (localAddress);
       m_rxTrace (packet);
       m_rxTraceWithAddresses (packet, from, localAddress);
-      if (InetSocketAddress::IsMatchingType (from))
+
+      double recTime = Simulator::Now ().GetSeconds ();
+      if (m_lastSentPacket == 0.0)
         {
-          NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds () << "s server received " << packet->GetSize () << " bytes from " <<
-                       InetSocketAddress::ConvertFrom (from).GetIpv4 () << " port " <<
-                       InetSocketAddress::ConvertFrom (from).GetPort ());
+          m_t1Start = recTime;
         }
-      else if (Inet6SocketAddress::IsMatchingType (from))
-        {
-          NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds () << "s server received " << packet->GetSize () << " bytes from " <<
-                       Inet6SocketAddress::ConvertFrom (from).GetIpv6 () << " port " <<
-                       Inet6SocketAddress::ConvertFrom (from).GetPort ());
-        }
+      if (fabs (m_lastSentPacket - recTime ) > 7.0)
+      {
+        m_t1End = m_lastSentPacket;
+        m_t2Start = recTime;
+      }
+      m_lastSentPacket = recTime;
+      m_nPackets++;
+      packet->RemoveAllPacketTags ();
+      packet->RemoveAllByteTags ();
 
-      // packet->RemoveAllPacketTags ();
-      // packet->RemoveAllByteTags ();
-
-      // NS_LOG_LOGIC ("Echoing packet");
-      // socket->SendTo (packet, 0, from);
-
-      // if (InetSocketAddress::IsMatchingType (from))
-      //   {
-      //     NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds () << "s server sent " << packet->GetSize () << " bytes to " <<
-      //                  InetSocketAddress::ConvertFrom (from).GetIpv4 () << " port " <<
-      //                  InetSocketAddress::ConvertFrom (from).GetPort ());
-      //   }
-      // else if (Inet6SocketAddress::IsMatchingType (from))
-      //   {
-      //     NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds () << "s server sent " << packet->GetSize () << " bytes to " <<
-      //                  Inet6SocketAddress::ConvertFrom (from).GetIpv6 () << " port " <<
-      //                  Inet6SocketAddress::ConvertFrom (from).GetPort ());
-      //   }
     }
 }
 
