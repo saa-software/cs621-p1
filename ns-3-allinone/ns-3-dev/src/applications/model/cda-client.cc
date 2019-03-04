@@ -71,10 +71,6 @@ CdaClient::GetTypeId (void)
                    MakeUintegerAccessor (&CdaClient::SetDataSize,
                                          &CdaClient::GetDataSize),
                    MakeUintegerChecker<uint32_t> ())
-    .AddAttribute ("HighEntropyData", "If the packet data is high entropy",
-                   BooleanValue (false),
-                   MakeBooleanAccessor (&CdaClient::SetHighEntropyData),
-                   MakeBooleanChecker ())
     .AddTraceSource ("Tx", "A new packet is created and is sent",
                      MakeTraceSourceAccessor (&CdaClient::m_txTrace),
                      "ns3::Packet::TracedCallback")
@@ -99,7 +95,6 @@ CdaClient::CdaClient ()
   m_sendEvent = EventId ();
   m_data = 0;
   m_dataSize = 0;
-  m_highEntropyData = false;
 }
 
 CdaClient::~CdaClient()
@@ -222,123 +217,6 @@ CdaClient::GetDataSize (void) const
 {
   NS_LOG_FUNCTION (this);
   return m_size;
-}
-
-void 
-CdaClient::SetFill (std::string fill)
-{
-  NS_LOG_FUNCTION (this << fill);
-
-  uint32_t dataSize = fill.size () + 1;
-
-  if (dataSize != m_dataSize)
-    {
-      delete [] m_data;
-      m_data = new uint8_t [dataSize];
-      m_dataSize = dataSize;
-    }
-
-  memcpy (m_data, fill.c_str (), dataSize);
-
-  //
-  // Overwrite packet size attribute.
-  //
-  m_size = dataSize;
-}
-
-void 
-CdaClient::SetFill (uint8_t fill, uint32_t dataSize)
-{
-  NS_LOG_FUNCTION (this << fill << dataSize);
-  if (dataSize != m_dataSize)
-    {
-      delete [] m_data;
-      m_data = new uint8_t [dataSize];
-      m_dataSize = dataSize;
-    }
-
-  memset (m_data, fill, dataSize);
-
-  //
-  // Overwrite packet size attribute.
-  //
-  m_size = dataSize;
-}
-
-void 
-CdaClient::SetFill (uint8_t *fill, uint32_t fillSize, uint32_t dataSize)
-{
-  NS_LOG_FUNCTION (this << fill << fillSize << dataSize);
-  if (dataSize != m_dataSize)
-    {
-      delete [] m_data;
-      m_data = new uint8_t [dataSize];
-      m_dataSize = dataSize;
-    }
-
-  if (fillSize >= dataSize)
-    {
-      memcpy (m_data, fill, dataSize);
-      m_size = dataSize;
-      return;
-    }
-
-  //
-  // Do all but the final fill.
-  //
-  uint32_t filled = 0;
-  while (filled + fillSize < dataSize)
-    {
-      memcpy (&m_data[filled], fill, fillSize);
-      filled += fillSize;
-    }
-
-  //
-  // Last fill may be partial
-  //
-  memcpy (&m_data[filled], fill, dataSize - filled);
-
-  //
-  // Overwrite packet size attribute.
-  //
-  m_size = dataSize;
-}
-
-void 
-CdaClient::SetHighEntropyData (bool entropy)
-{
-  NS_LOG_FUNCTION (this << entropy);
-  m_highEntropyData = entropy;
-  delete [] m_data;
-  m_data = new uint8_t [m_size];
-  m_dataSize = m_size;
-  if (entropy)
-    {
-      ifstream file;
-      file.open ("/dev/urandom", ios::in | ios::binary);
-      if (file.is_open ())
-        {
-          char c;
-          uint32_t j = 0;
-          while(j < m_size)
-            {
-              c = file.get();
-              NS_LOG_FUNCTION (this << j);
-              for (int i = 0; i < 8; i++)
-                {
-                  m_data[j]  = ((c >> i) & 1);
-                  j++;
-                }
-            }
-        }
-    } 
-  else 
-    {
-      for(uint32_t i = 0; i < m_size; i++) 
-        {
-          m_data[i] = 0;
-        }
-    }   
 }
 
 void 
