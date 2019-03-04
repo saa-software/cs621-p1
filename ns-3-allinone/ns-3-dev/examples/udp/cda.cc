@@ -15,8 +15,10 @@
  */
 
 // - Tracing of queues and packet receptions to file "cda.tr"
-
+  
 #include <fstream>
+#include <string>
+#include <iostream> 
 #include "ns3/core-module.h"
 #include "ns3/applications-module.h"
 #include "ns3/internet-module.h"
@@ -49,8 +51,8 @@ main (int argc, char *argv[])
   cmd.AddValue("compressionEnabled", "Enable or disable compression link", compressionEnabled);
   cmd.Parse (argc, argv);
 
-  NS_LOG_INFO ("Capacity of Compression link: " << capacity);
-  NS_LOG_INFO ("Compression Enabled: " << compressionEnabled);
+  std::cout << "Capacity of Compression link: " << capacity << std::endl;
+  std::cout << "Compression Enabled: " << compressionEnabled << std::endl;
 
 // Explicitly create the nodes required by the topology (shown above).
 
@@ -111,7 +113,16 @@ main (int argc, char *argv[])
 
   AsciiTraceHelper ascii;
   // p2p.EnableAsciiAll (ascii.CreateFileStream ("cda.tr"));
-  p2p.EnablePcapAll ("cda", false);
+
+  if (compressionEnabled)
+  {
+    std::string fileName = "cda-" + std::to_string(capacity) + "-compression-";
+    p2p.EnablePcapAll (fileName, false);
+  } else {
+    std::string fileName = "cda-" + std::to_string(capacity) + "-noCompression-";
+    p2p.EnablePcapAll (fileName, false);
+  }
+  
 
 //
 // Now, do the actual simulation.
