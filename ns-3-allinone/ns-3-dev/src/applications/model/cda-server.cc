@@ -61,7 +61,6 @@ CdaServer::GetTypeId (void)
 
 CdaServer::CdaServer ()
 {
-  NS_LOG_FUNCTION (this);
   m_t1Start = 0.0;
   m_t1End = 0.0;
   m_t2Start = 0.0;
@@ -72,7 +71,6 @@ CdaServer::CdaServer ()
 
 CdaServer::~CdaServer()
 {
-  NS_LOG_FUNCTION (this);
   m_socket = 0;
   m_socket6 = 0;
   m_t1Start = 0.0;
@@ -85,15 +83,12 @@ CdaServer::~CdaServer()
 void
 CdaServer::DoDispose (void)
 {
-  NS_LOG_FUNCTION (this);
   Application::DoDispose ();
 }
 
 void 
 CdaServer::StartApplication (void)
 {
-  NS_LOG_FUNCTION (this);
-
   if (m_socket == 0)
     {
       TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
@@ -149,8 +144,6 @@ CdaServer::StartApplication (void)
 void 
 CdaServer::StopApplication ()
 {
-  NS_LOG_FUNCTION (this);
-
   if (m_socket != 0) 
     {
       m_socket->Close ();

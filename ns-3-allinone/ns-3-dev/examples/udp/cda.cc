@@ -36,7 +36,7 @@ main (int argc, char *argv[])
 // Users may find it convenient to turn on explicit debugging
 // for selected modules; the below lines suggest how to do this
 //
-  // LogComponentEnable ("Cda", LOG_LEVEL_INFO);
+  LogComponentEnable ("Cda", LOG_LEVEL_INFO);
   // LogComponentEnable ("CdaClientApplication", LOG_LEVEL_ALL);
   LogComponentEnable ("CdaServerApplication", LOG_LEVEL_ALL);
 
@@ -48,10 +48,12 @@ main (int argc, char *argv[])
   cmd.AddValue("capacity", "Capacity of compression link in Mbps", capacity);
   cmd.AddValue("compressionEnabled", "Enable or disable compression link", compressionEnabled);
   cmd.Parse (argc, argv);
-//
+
+  NS_LOG_INFO ("Capacity of Compression link: " << capacity);
+  NS_LOG_INFO ("Compression Enabled: " << compressionEnabled);
+
 // Explicitly create the nodes required by the topology (shown above).
-//
-  NS_LOG_INFO ("Create nodes.");
+
   NodeContainer n;
   n.Create (4);
 
@@ -79,7 +81,6 @@ main (int argc, char *argv[])
 
   Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
 
-  NS_LOG_INFO ("Create Applications.");
 //
 // Create a CdaServer application on node one.
 //
@@ -115,7 +116,6 @@ main (int argc, char *argv[])
 //
 // Now, do the actual simulation.
 //
-  NS_LOG_INFO ("Run Simulation.");
   Simulator::Run ();
   Simulator:: 
   Simulator::Destroy ();
