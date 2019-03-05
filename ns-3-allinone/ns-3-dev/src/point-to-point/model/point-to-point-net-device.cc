@@ -337,7 +337,16 @@ void
 PointToPointNetDevice::Receive (Ptr<Packet> packet)
 {
 
-  DecompressPacket (packet);
+  PppHeader ppp;
+  packet->PeekHeader (ppp);
+  printf("recv protocol: %d\n",ppp.GetProtocol ());
+  if (ppp.GetProtocol () == 16417) {
+    packet = DecompressPacket (packet);
+  }
+  printf("recv decompress protocol: %d\n", ppp.GetProtocol ());
+  PppHeader pppTest;
+  packet->PeekHeader (pppTest);
+  printf("recv test decompress protocol: %d\n", pppTest.GetProtocol ());
 
   NS_LOG_FUNCTION (this << packet);
   uint16_t protocol = 0;
@@ -525,6 +534,12 @@ PointToPointNetDevice::Send (Ptr<Packet> packet, const Address &dest, uint16_t p
   NS_LOG_LOGIC ("p=" << packet << ", dest=" << &dest);
   NS_LOG_LOGIC ("UID is " << packet->GetUid ());
 
+  PppHeader ppp;
+  packet->PeekHeader (ppp);
+  if (ppp.GetProtocol () == 33) {
+    packet = CompressPacket(packet);
+  }
+
   //
   // If IsLinkUp() is false it means there is no channel to send any packet
   // over so we just hit the drop trace on the packet and return an error.
@@ -611,12 +626,12 @@ PointToPointNetDevice::SetPromiscReceiveCallback (NetDevice::PromiscReceiveCallb
 Ptr<Packet>
 PointToPointNetDevice::CompressPacket (Ptr<Packet> packet)
 {
-  printf ("compress\n");
-  printf ("size of packet: %d\n", packet->GetSize ());
+  printf ("Compress\n");
+  printf ("Size of packet: %d\n", packet->GetSize ());
 
-  PppHeader ppp;
-  packet->PeekHeader (ppp);
-  printf("protocol %d\n", ppp.GetProtocol ());
+  // PppHeader ppp;
+  // packet->PeekHeader (ppp);
+  // printf("protocol %d\n", ppp.GetProtocol ());
 
   uint32_t destSize;
   char *data;
@@ -672,7 +687,6 @@ PointToPointNetDevice::CompressPacket (Ptr<Packet> packet)
 
   PppHeader ppp2;
   compPacket->PeekHeader (ppp2);
-  printf("preset protocol %d\n", ppp2.GetProtocol ());
   ppp2.SetProtocol (0x4021);
   printf("after set protocol %d\n", ppp2.GetProtocol ());
 
@@ -682,11 +696,8 @@ PointToPointNetDevice::CompressPacket (Ptr<Packet> packet)
 Ptr<Packet>
 PointToPointNetDevice::DecompressPacket (Ptr<Packet> packet)
 {
-
-  Ptr<Packet> compPacket = CompressPacket (packet);
-
-  printf ("decompress\n");
-  printf ("size of packet: %d\n", compPacket->GetSize ());
+  printf ("Decompress:\n");
+  printf ("Size of packet: %d\n", packet->GetSize ());
 
   char *data;
   data = (char *) &packet;
@@ -711,7 +722,10 @@ PointToPointNetDevice::DecompressPacket (Ptr<Packet> packet)
   inflate (&infstream, Z_NO_FLUSH);
   inflateEnd (&infstream);
 
+  PppHeader ppp2;
   Ptr<Packet> decompPacket = Create<Packet> (temp_buffer, sizeof(temp_buffer));
+  decompPacket->PeekHeader (ppp2);
+  ppp2.SetProtocol (0x0021);
   printf ("size of decompressed packet: %d\n", decompPacket->GetSize ());
 
   return decompPacket;
