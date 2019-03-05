@@ -43,7 +43,7 @@ main (int argc, char *argv[])
   CommandLine cmd;
 
   uint32_t capacity = 1;
-  bool compressionEnabled = 0;
+  bool compressionEnabled = 1;
 
   cmd.AddValue("capacity", "Capacity of compression link in Mbps", capacity);
   cmd.AddValue("compressionEnabled", "Enable or disable compression link", compressionEnabled);
@@ -64,6 +64,7 @@ main (int argc, char *argv[])
 
   PointToPointHelper p2p;
   p2p.SetDeviceAttribute ("DataRate", StringValue ("8Mbps"));
+  p2p.SetDeviceAttribute ("CompressionEnabled", BooleanValue(compressionEnabled));
 
   NetDeviceContainer p0p1 = p2p.Install (n0n1);
   NetDeviceContainer p1p2 = p2p.Install (n1n2);

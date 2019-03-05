@@ -562,6 +562,7 @@ PointToPointNetDevice::Send (
       return false;
     }
 
+    std::cout << "compressionEnabled"<< m_compressionEnabled <<std::endl;
 
   if(m_compressionEnabled)
     {
