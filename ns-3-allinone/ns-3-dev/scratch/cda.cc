@@ -86,6 +86,7 @@ main (int argc, char *argv[])
 // Create a CdaServer application on node one.
 //
 
+  Packet::EnablePrinting();
   double start = 1.0;
   double stop = 3000.0;
   uint16_t port = 9;  // well-known echo port number
@@ -99,7 +100,7 @@ main (int argc, char *argv[])
 // node three.
 //
   uint32_t packetSize = 1100;
-  uint32_t maxPacketCount = 10;
+  uint32_t maxPacketCount = 4;
   Time interPacketInterval = MilliSeconds (1);
   CdaClientHelper client (i2i3.GetAddress(1), port);
   client.SetAttribute ("MaxPackets", UintegerValue (maxPacketCount));

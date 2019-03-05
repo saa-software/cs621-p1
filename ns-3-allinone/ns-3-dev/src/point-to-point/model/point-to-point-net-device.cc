@@ -209,8 +209,36 @@ PointToPointNetDevice::AddHeader (Ptr<Packet> p, uint16_t protocolNumber)
   p->AddHeader (ppp);
 }
 
+void
+PointToPointNetDevice::AddCompHeader (Ptr<Packet> p, uint16_t protocolNumber)
+{
+  NS_LOG_FUNCTION (this << p << protocolNumber);
+  PppHeader ppp;
+  //if(EtherToPpp (protocolNumber) == 0x0021) {
+    ppp.SetProtocol (CompEtherToPpp(protocolNumber));
+  //}
+  p->AddHeader (ppp);
+
+}
+
 bool
 PointToPointNetDevice::ProcessHeader (Ptr<Packet> p, uint16_t& param)
+{
+  NS_LOG_FUNCTION (this << p << param);
+  PppHeader ppp;
+  p->RemoveHeader (ppp);
+  // if(ppp.GetProtocol() == 0x4021) {
+  std::cout << ppp.GetProtocol () <<std::endl;
+  //   param = PppToEther(0x0021);
+  // } else {
+  param = PppToEther (ppp.GetProtocol ());
+  // }
+
+  return true;
+}
+
+bool
+PointToPointNetDevice::ProcessCompHeader (Ptr<Packet> p, uint16_t& param)
 {
   NS_LOG_FUNCTION (this << p << param);
   PppHeader ppp;
@@ -384,26 +412,49 @@ PointToPointNetDevice::Receive (Ptr<Packet> packet)
       // there is no difference in what the promisc callback sees and what the
       // normal receive callback sees.
       //
-      ProcessHeader (packet, protocol);
-     std::cout << "protocol is " << protocol <<std::endl;
+      // std::cout <<"receive before process" <<std::endl;
+      // packet->Print (std::cout);
+      // std::cout << std::endl;
+      //
+      //
+      // std::cout <<"receive after process" <<std::endl;
+      // packet->Print (std::cout);
+      // std::cout << std::endl;
       //DECOMPRESS HERE
       if(m_compressionEnabled)
         {
+
+          Ptr<Packet> originalPacket = packet->Copy ();
+          PppHeader ppp;
+          originalPacket->RemoveHeader (ppp);
+            std::cout << ppp.GetProtocol() <<std::endl;
+          if(ppp.GetProtocol() != 0x4021) {
+
+            Ptr<Packet> originalPacket2 = packet->Copy ();
+            ProcessHeader(packet, protocol);
           //TODO: change hardcoded
-          if(protocol == 2048) {
-            std::cout << "HERE in Receive" <<std::endl;
+
+
             // AddHeader(packet, 0x0800);
           //  PreprocessPacket(packet);
 
               // std::cout << std::endl;
-            CompressPacket(packet);
-            AddHeader(packet, 0x4021);
+              packet->Print (std::cout);
+              std::cout << std::endl;
+            CompressPacket(originalPacket2);
+          //  AddHeader(packet, 0x4021);
+            std::cout <<"originalPacket2" <<std::endl;
+            originalPacket2->Print (std::cout);
+            std::cout << std::endl;
           } else {
-            std::cout <<"recv decomp"<< std::endl;
-            DecompressPacket(packet);
+            //std::cout <<"recv decomp"<< std::endl;
+            ProcessHeader(packet, protocol);
 
           }
         }
+      else {
+          ProcessHeader (packet, protocol);
+      }
 
       if (!m_promiscCallback.IsNull ())
         {
@@ -562,8 +613,6 @@ PointToPointNetDevice::Send (
       return false;
     }
 
-    std::cout << "compressionEnabled"<< m_compressionEnabled <<std::endl;
-
   if(m_compressionEnabled)
     {
       //Compress goes Here
@@ -571,8 +620,15 @@ PointToPointNetDevice::Send (
       // PppHeader ppp;
       // copy->RemoveHeader(ppp);
       // uint16_t proto = ppp.GetProtocol();
-      std::cout << "hi " << protocolNumber <<std::endl;
-      if(protocolNumber == 0x4021) {
+      // std::cout <<"IN SEND!!" <<std::endl;
+      // packet->Print (std::cout);
+      // std::cout << std::endl;
+
+      Ptr<Packet> originalPacket = packet->Copy ();
+      PppHeader ppp;
+      originalPacket->RemoveHeader (ppp);
+
+      if(ppp.GetProtocol() == 0x4021) {
           std::cout << "inside Send before decompres" <<std::endl;
           DecompressPacket(packet);
           // AddHeader(packet, protocolNumber);
@@ -700,6 +756,7 @@ PointToPointNetDevice::CompressPacket (Ptr<Packet> packet)
     deflate(&defstream, Z_FINISH);
     deflateEnd(&defstream);
 
+    std::cout <<"in compress" <<std::endl;
     packet->Print (std::cout);
     std::cout << std::endl;
     // printf("packet: %s\n", charPointer);
@@ -790,7 +847,7 @@ PointToPointNetDevice::PppToEther (uint16_t proto)
   NS_LOG_FUNCTION_NOARGS();
   switch(proto)
     {
-    case 0x4021: return 0x4021;
+    case 0x4021: return 0x0800;
     case 0x0021: return 0x0800;   //IPv4
     case 0x0057: return 0x86DD;   //IPv6
     default: NS_ASSERT_MSG (false, "PPP Protocol number not defined!");
@@ -812,5 +869,18 @@ PointToPointNetDevice::EtherToPpp (uint16_t proto)
   return 0;
 }
 
+uint16_t
+PointToPointNetDevice::CompEtherToPpp (uint16_t proto)
+{
+  NS_LOG_FUNCTION_NOARGS();
+  switch(proto)
+    {
+    // case 0x4021: return 0x4021;
+    case 0x0800: return 0x4021;   //IPv4
+    case 0x86DD: return 0x0057;   //IPv6
+    default: NS_ASSERT_MSG (false, "PPP Protocol number not defined!");
+    }
+  return 0;
+}
 
 } // namespace ns3
