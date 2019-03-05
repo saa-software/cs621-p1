@@ -336,6 +336,9 @@ PointToPointNetDevice::SetReceiveErrorModel (Ptr<ErrorModel> em)
 void
 PointToPointNetDevice::Receive (Ptr<Packet> packet)
 {
+
+  DecompressPacket (packet);
+
   NS_LOG_FUNCTION (this << packet);
   uint16_t protocol = 0;
 
@@ -608,7 +611,7 @@ PointToPointNetDevice::SetPromiscReceiveCallback (NetDevice::PromiscReceiveCallb
 Ptr<Packet>
 PointToPointNetDevice::CompressPacket (Ptr<Packet> packet)
 {
-
+  printf ("compress\n");
   printf ("size of packet: %d\n", packet->GetSize ());
 
   uint32_t destSize;
@@ -663,76 +666,24 @@ PointToPointNetDevice::CompressPacket (Ptr<Packet> packet)
   Ptr<Packet> compPacket = Create<Packet> (temp_buffer, destSize);
   printf ("size of compressed packet: %d\n", compPacket->GetSize ());
 
-  // outData.swap(buffer);
-  // Packet::EnablePrinting ();
-  // packet->RemoveHeader(ppp);
-  // if (ppp.GetProtocol == 0x4021) {
-
-  // Ptr<Packet> compressedPacket = Create<Packet> ();
-
-  //TODO: BELOW IS GOOD
-  // char *charPointer;
-  // charPointer = (char*) &packet;
-
-  // // const char a[strlen(charPointer)] = "hello";
-  // const char b[] = {};
-
-  // z_stream defstream;
-  // defstream.zalloc = Z_NULL;
-  // defstream.zfree = Z_NULL;
-  // defstream.opaque = Z_NULL;
-  // // setup "a" as the input and "b" as the compressed output
-  // defstream.avail_in = (uInt)strlen(charPointer)+1; // size of input, string + terminator
-  // defstream.next_in = (Bytef *)charPointer; // input char array
-  // defstream.avail_out = (uInt)sizeof(b); // size of output
-  // defstream.next_out = (Bytef *)b; // output char array
-
-  // // the actual compression work.
-  // deflateInit(&defstream, Z_BEST_COMPRESSION);
-  // deflate(&defstream, Z_FINISH);
-  // deflateEnd(&defstream);
-
-  // uint32_t size = sizeof(b);
-  // u_int8_t *length = (u_int8_t *) b;
-  // Ptr<Packet> compressedPacket = Create<Packet> (length, size);
-  // PppHeader ppp;
-  // ppp.SetProtocol(0x4021);
-  // compressedPacket->AddHeader (ppp);
-
-  // printf("size of compressed packet: %d\n", compressedPacket->GetSize());
-
-  //TODO: ABOVE IS GOOD
-
-  // PppHeader ppp2;
-  // ppp2 = compressedPacket->RemoveHeader ();
-  // ppp2.GetProtocol();
-
-  // printf("%d\n", ppp2.GetProtocol());
-
-  // packet->Print (std::cout);
-  // std::cout << std::endl;
-
-  // printf("packet: %s\n", charPointer);
-  // printf("b: %s\n", b);
-
-  // printf("%lu\n", sizeof(charPointer));
-  // printf("%lu\n", sizeof(b));
-
-  // printf(strlen(charPointer));
-  // printf(sizeof(packet));
-
-  return packet;
-  // } else {
-  // return packet;
-  // }
+  return compPacket;
 }
 
 Ptr<Packet>
 PointToPointNetDevice::DecompressPacket (Ptr<Packet> packet)
 {
 
-  const char b[50] = {};
-  const char c[50] = {};
+  Ptr<Packet> compPacket = CompressPacket (packet);
+
+  printf ("decompress\n");
+  printf ("size of packet: %d\n", compPacket->GetSize ());
+
+  char *data;
+  data = (char *) &packet;
+  u_int32_t srcSize = packet->GetSize ();
+
+  const size_t BUFSIZE = 1024;
+  uint8_t temp_buffer[BUFSIZE];
 
   z_stream infstream;
   infstream.zalloc = Z_NULL;
@@ -740,17 +691,20 @@ PointToPointNetDevice::DecompressPacket (Ptr<Packet> packet)
   infstream.opaque = Z_NULL;
   // setup "b" as the input and "c" as the compressed output
   // infstream.avail_in = (uInt)((char*)defstream.next_out - b); // size of input
-  infstream.avail_in = 50;
-  infstream.next_in = (Bytef *) b; // input char array
-  infstream.avail_out = (uInt) sizeof (c); // size of output
-  infstream.next_out = (Bytef *) c; // output char array
+  infstream.avail_in = srcSize;
+  infstream.next_in = (Bytef *) data; // input char array
+  infstream.avail_out = (uInt) sizeof (temp_buffer); // size of output
+  infstream.next_out = (Bytef *) temp_buffer; // output char array
 
   // the actual DE-compression work.
   inflateInit (&infstream);
   inflate (&infstream, Z_NO_FLUSH);
   inflateEnd (&infstream);
 
-  return packet;
+  Ptr<Packet> decompPacket = Create<Packet> (temp_buffer, sizeof(temp_buffer));
+  printf ("size of decompressed packet: %d\n", decompPacket->GetSize ());
+
+  return decompPacket;
 }
 
 bool
