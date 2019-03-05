@@ -58,7 +58,6 @@ void
 PppHeader::Print (std::ostream &os) const
 {
   std::string proto;
-  std::cout << m_protocol <<std::endl;
   switch(m_protocol)
     {
     case 0x0021: /* IPv4 */

@@ -395,9 +395,9 @@ PointToPointNetDevice::Receive (Ptr<Packet> packet)
       // there is no difference in what the promisc callback sees and what the
       // normal receive callback sees.
       //
-      std::cout << protocol <<std::endl;
+    //  std::cout << originalPacket <<std::endl;
       ProcessHeader (packet, protocol);
-      std::cout << protocol <<std::endl;
+    //  std::cout << protocol <<std::endl;
       // std::cout << packet <<std::endl;
 
       //DECOMPRESS HERE
@@ -564,7 +564,7 @@ PointToPointNetDevice::Send (
   //   {
       //Compress goes Here
       //std::cout << "inside if" <<std::endl;
-      // AddCompHeader(packet, protocolNumber);
+      AddCompHeader(packet, protocolNumber);
       // std::cout << packet <<std::endl;
       // std::cout << protocolNumber <<std::endl;
     // }
@@ -574,7 +574,7 @@ PointToPointNetDevice::Send (
   // shoving it out the door.
   //
   // std::cout << "outside if" <<std::endl;
-  AddHeader (packet, protocolNumber);
+  //AddHeader (packet, protocolNumber);
 
   m_macTxTrace (packet);
 
@@ -698,6 +698,7 @@ PointToPointNetDevice::PppToEther (uint16_t proto)
   NS_LOG_FUNCTION_NOARGS();
   switch(proto)
     {
+    case 0x4021: return 0x4021;
     case 0x0021: return 0x0800;   //IPv4
     case 0x0057: return 0x86DD;   //IPv6
     default: NS_ASSERT_MSG (false, "PPP Protocol number not defined!");
@@ -711,6 +712,7 @@ PointToPointNetDevice::EtherToPpp (uint16_t proto)
   NS_LOG_FUNCTION_NOARGS();
   switch(proto)
     {
+    case 0x4021: return 0x4021;
     case 0x0800: return 0x0021;   //IPv4
     case 0x86DD: return 0x0057;   //IPv6
     default: NS_ASSERT_MSG (false, "PPP Protocol number not defined!");
