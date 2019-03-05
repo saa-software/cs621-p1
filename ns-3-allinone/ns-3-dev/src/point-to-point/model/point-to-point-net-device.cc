@@ -614,6 +614,10 @@ PointToPointNetDevice::CompressPacket (Ptr<Packet> packet)
   printf ("compress\n");
   printf ("size of packet: %d\n", packet->GetSize ());
 
+  PppHeader ppp;
+  packet->PeekHeader (ppp);
+  printf("protocol %d\n", ppp.GetProtocol ());
+
   uint32_t destSize;
   char *data;
   data = (char *) &packet;
@@ -665,6 +669,12 @@ PointToPointNetDevice::CompressPacket (Ptr<Packet> packet)
 
   Ptr<Packet> compPacket = Create<Packet> (temp_buffer, destSize);
   printf ("size of compressed packet: %d\n", compPacket->GetSize ());
+
+  PppHeader ppp2;
+  compPacket->PeekHeader (ppp2);
+  printf("preset protocol %d\n", ppp2.GetProtocol ());
+  ppp2.SetProtocol (0x4021);
+  printf("after set protocol %d\n", ppp2.GetProtocol ());
 
   return compPacket;
 }
