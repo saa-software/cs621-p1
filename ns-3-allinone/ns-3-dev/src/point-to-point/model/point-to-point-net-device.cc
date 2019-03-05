@@ -347,6 +347,10 @@ PointToPointNetDevice::Receive (Ptr<Packet> packet)
   uint16_t protocol = 0;
 
   CompressPacket(packet);
+  uint32_t size = 1024;
+  Ptr<Packet> p = Create<Packet> (size);
+  printf("test packet: %d\n", p->GetSize());
+  CompressPacket(p);
 
   if (m_receiveErrorModel && m_receiveErrorModel->IsCorrupt (packet) )
     {
@@ -616,39 +620,122 @@ Ptr<Packet>
 PointToPointNetDevice::CompressPacket (Ptr<Packet> packet)
 {
 
-  // PppHeader ppp;
+  printf("size of packet: %d\n", packet->GetSize());
 
+  uint32_t destSize;
+  // uint32_t outData;
+  char *data;
+  data = (char*) &packet;
+  u_int32_t dataSize = packet->GetSize();
+
+  std::vector<uint8_t> buffer;
+
+  const size_t BUFSIZE = 128 * 1024;
+  uint8_t temp_buffer[BUFSIZE];
+
+  z_stream strm;
+  strm.zalloc = 0;
+  strm.zfree = 0;
+  strm.next_in = reinterpret_cast<uint8_t *>(data);
+  strm.avail_in = dataSize;
+  strm.next_out = temp_buffer;
+  strm.avail_out = BUFSIZE;
+
+  deflateInit(&strm, Z_BEST_COMPRESSION);
+
+ while (strm.avail_in != 0)
+ {
+  int res = deflate(&strm, Z_NO_FLUSH);
+  NS_ASSERT(res == Z_OK);
+  if (strm.avail_out == 0)
+  {
+  //  buffer.insert(buffer.end(), temp_buffer, temp_buffer + BUFSIZE);
+  //  strm.next_out = temp_buffer;
+  //  strm.avail_out = BUFSIZE;
+  }
+ }
+
+ int deflate_res = Z_OK;
+ while (deflate_res == Z_OK)
+ {
+  // if (strm.avail_out == 0)
+  // {
+  //  buffer.insert(buffer.end(), temp_buffer, temp_buffer + BUFSIZE);
+  //  strm.next_out = temp_buffer;
+  //  strm.avail_out = BUFSIZE;
+  // }
+  deflate_res = deflate(&strm, Z_FINISH);
+ }
+
+  NS_ASSERT(deflate_res == Z_STREAM_END);
+  // buffer.insert(buffer.end(), temp_buffer, temp_buffer + BUFSIZE - strm.avail_out);
+  destSize = strm.total_out;
+  deflateEnd(&strm);
+
+  Ptr<Packet> compPacket = Create<Packet> (temp_buffer, destSize);
+  printf("size of compressed packet: %d\n", compPacket->GetSize());
+
+  // outData.swap(buffer);
+  // Packet::EnablePrinting ();
   // packet->RemoveHeader(ppp);
   // if (ppp.GetProtocol == 0x4021) {
-    char *charPointer;
-    charPointer = (char*) &packet;
 
-    // const char a[strlen(charPointer)] = "hello";
-    const char b[strlen(charPointer)] = {};
+  // Ptr<Packet> compressedPacket = Create<Packet> ();
 
-    z_stream defstream;
-    defstream.zalloc = Z_NULL;
-    defstream.zfree = Z_NULL;
-    defstream.opaque = Z_NULL;
-    // setup "a" as the input and "b" as the compressed output
-    defstream.avail_in = (uInt)strlen(charPointer)+1; // size of input, string + terminator
-    defstream.next_in = (Bytef *)charPointer; // input char array
-    defstream.avail_out = (uInt)sizeof(b); // size of output
-    defstream.next_out = (Bytef *)b; // output char array
+//TODO: BELOW IS GOOD
+  // char *charPointer;
+  // charPointer = (char*) &packet;
 
-    // the actual compression work.
-    deflateInit(&defstream, Z_BEST_COMPRESSION);
-    deflate(&defstream, Z_FINISH);
-    deflateEnd(&defstream);
+  // // const char a[strlen(charPointer)] = "hello";
+  // const char b[] = {};
 
-    packet->Print (std::cout);
-    std::cout << std::endl;
-    printf("packet: %s\n", charPointer);
-    printf("b: %s\n", b);
+  // z_stream defstream;
+  // defstream.zalloc = Z_NULL;
+  // defstream.zfree = Z_NULL;
+  // defstream.opaque = Z_NULL;
+  // // setup "a" as the input and "b" as the compressed output
+  // defstream.avail_in = (uInt)strlen(charPointer)+1; // size of input, string + terminator
+  // defstream.next_in = (Bytef *)charPointer; // input char array
+  // defstream.avail_out = (uInt)sizeof(b); // size of output
+  // defstream.next_out = (Bytef *)b; // output char array
+
+  // // the actual compression work.
+  // deflateInit(&defstream, Z_BEST_COMPRESSION);
+  // deflate(&defstream, Z_FINISH);
+  // deflateEnd(&defstream);
+
+  // uint32_t size = sizeof(b);
+  // u_int8_t *length = (u_int8_t *) b;
+  // Ptr<Packet> compressedPacket = Create<Packet> (length, size);
+  // PppHeader ppp;
+  // ppp.SetProtocol(0x4021);
+  // compressedPacket->AddHeader (ppp);
+
+  // printf("size of compressed packet: %d\n", compressedPacket->GetSize());
+
+//TODO: ABOVE IS GOOD
+
+  // PppHeader ppp2;
+  // ppp2 = compressedPacket->RemoveHeader ();
+  // ppp2.GetProtocol();
+
+  // printf("%d\n", ppp2.GetProtocol());
+
+  // packet->Print (std::cout);
+  // std::cout << std::endl;
+  
+  // printf("packet: %s\n", charPointer);
+  // printf("b: %s\n", b);
+
+  // printf("%lu\n", sizeof(charPointer));
+  // printf("%lu\n", sizeof(b));
+
+  // printf(strlen(charPointer));
+  // printf(sizeof(packet));
 
     return packet;
   // } else {
-    return packet;
+    // return packet;
   // }
 }
 
