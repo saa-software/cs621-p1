@@ -206,18 +206,6 @@ PointToPointNetDevice::AddHeader (Ptr<Packet> p, uint16_t protocolNumber)
   NS_LOG_FUNCTION (this << p << protocolNumber);
   PppHeader ppp;
   ppp.SetProtocol (EtherToPpp (protocolNumber));
-
-  p->AddHeader (ppp);
-}
-
-void
-PointToPointNetDevice::AddCompHeader (Ptr<Packet> p, uint16_t protocolNumber)
-{
-  NS_LOG_FUNCTION (this << p << protocolNumber);
-  PppHeader ppp;
-  if(EtherToPpp (protocolNumber) == 0x0021) {
-    ppp.SetProtocol (0x4021);
-  }
   p->AddHeader (ppp);
 }
 
@@ -365,8 +353,6 @@ PointToPointNetDevice::Receive (Ptr<Packet> packet)
   NS_LOG_FUNCTION (this << packet);
   uint16_t protocol = 0;
 
-  CompressPacket(packet);
-
   if (m_receiveErrorModel && m_receiveErrorModel->IsCorrupt (packet) )
     {
       //
@@ -390,7 +376,7 @@ PointToPointNetDevice::Receive (Ptr<Packet> packet)
       // Trace sinks will expect complete packets, not packets without some of the
       // headers.
       //
-      Ptr<Packet> originalPacket = packet->Copy ();
+      // Ptr<Packet> originalPacket = packet->Copy ();
 
       //
       // Strip off the point-to-point protocol header and forward this packet
@@ -399,24 +385,34 @@ PointToPointNetDevice::Receive (Ptr<Packet> packet)
       // normal receive callback sees.
       //
       ProcessHeader (packet, protocol);
-
+     std::cout << "protocol is " << protocol <<std::endl;
       //DECOMPRESS HERE
       if(m_compressionEnabled)
         {
-          if(protocol == 0x4021) {
+          //TODO: change hardcoded
+          if(protocol == 2048) {
             std::cout << "HERE in Receive" <<std::endl;
-            //COMPRESS
+            // AddHeader(packet, 0x0800);
+          //  PreprocessPacket(packet);
+
+              // std::cout << std::endl;
+            CompressPacket(packet);
+            AddHeader(packet, 0x4021);
+          } else {
+            std::cout <<"recv decomp"<< std::endl;
+            DecompressPacket(packet);
+
           }
         }
 
       if (!m_promiscCallback.IsNull ())
         {
-          std::cout << "isNulll" <<std::endl;
-          m_macPromiscRxTrace (originalPacket);
+
+          m_macPromiscRxTrace (packet);
           m_promiscCallback (this, packet, protocol, GetRemote (), GetAddress (), NetDevice::PACKET_HOST);
         }
-        std::cout << "notNul" <<std::endl;
-      m_macRxTrace (originalPacket);
+
+      m_macRxTrace (packet);
       m_rxCallback (this, packet, protocol, GetRemote ());
     }
 }
@@ -569,17 +565,21 @@ PointToPointNetDevice::Send (
 
   if(m_compressionEnabled)
     {
-      std::cout << "enabled!!!" <<std::endl;
       //Compress goes Here
-      Ptr<Packet> copy = packet->Copy();
-      PppHeader ppp;
-      copy->RemoveHeader(ppp);
-      if(ppp.GetProtocol() ==0x4021) {
-          std::cout << "HERE!!!" <<std::endl;
-          //decompress
-      }
+      // Ptr<Packet> copy = packet->Copy();
+      // PppHeader ppp;
+      // copy->RemoveHeader(ppp);
+      // uint16_t proto = ppp.GetProtocol();
+      std::cout << "hi " << protocolNumber <<std::endl;
+      if(protocolNumber == 0x4021) {
+          std::cout << "inside Send before decompres" <<std::endl;
+          DecompressPacket(packet);
+          // AddHeader(packet, protocolNumber);
+      } else {
+        std::cout << "else " << protocolNumber <<std::endl;
+        AddHeader(packet, protocolNumber);
 
-      AddHeader(packet, 0x4021);
+      }
 
       // std::cout << protocolNumber <<std::endl;
     }
@@ -662,7 +662,14 @@ PointToPointNetDevice::SetPromiscReceiveCallback (NetDevice::PromiscReceiveCallb
 {
   m_promiscCallback = cb;
 }
-
+void
+PointToPointNetDevice::PreprocessPacket(Ptr<Packet> packet) {
+  CompHeader compHeader;
+  packet->RemoveHeader(compHeader);
+  uint16_t data = compHeader.GetData();
+  std::cout << data <<std::endl;
+  /* code */
+}
 Ptr<Packet>
 PointToPointNetDevice::CompressPacket (Ptr<Packet> packet)
 {
@@ -694,12 +701,12 @@ PointToPointNetDevice::CompressPacket (Ptr<Packet> packet)
 
     packet->Print (std::cout);
     std::cout << std::endl;
-    printf("packet: %s\n", charPointer);
-    printf("b: %s\n", b);
+    // printf("packet: %s\n", charPointer);
+    // printf("b: %s\n", b);
 
     return packet;
   // } else {
-    return packet;
+  //  return packet;
   // }
 }
 

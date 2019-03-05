@@ -37,7 +37,7 @@ main (int argc, char *argv[])
 // for selected modules; the below lines suggest how to do this
 //
   LogComponentEnable ("Cda", LOG_LEVEL_INFO);
-  //LogComponentEnable("PointToPointNetDevice", LOG_LEVEL_ALL);
+  // LogComponentEnable("PointToPointNetDevice", LOG_LEVEL_ALL);
   // LogComponentEnable ("CdaClientApplication", LOG_LEVEL_ALL);
   LogComponentEnable ("CdaServerApplication", LOG_LEVEL_ALL);
 

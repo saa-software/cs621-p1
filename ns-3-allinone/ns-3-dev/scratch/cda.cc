@@ -29,7 +29,7 @@ using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE ("Cda");
 
-int 
+int
 main (int argc, char *argv[])
 {
 //
@@ -117,7 +117,7 @@ main (int argc, char *argv[])
 // Now, do the actual simulation.
 //
   Simulator::Run ();
-  Simulator:: 
+  Simulator::
   Simulator::Destroy ();
   NS_LOG_INFO ("Done.");
 }
