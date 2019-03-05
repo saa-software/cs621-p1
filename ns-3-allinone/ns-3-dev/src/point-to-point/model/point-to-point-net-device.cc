@@ -612,14 +612,13 @@ PointToPointNetDevice::CompressPacket (Ptr<Packet> packet)
   printf ("size of packet: %d\n", packet->GetSize ());
 
   uint32_t destSize;
-  // uint32_t outData;
   char *data;
   data = (char *) &packet;
   u_int32_t dataSize = packet->GetSize ();
 
   std::vector<uint8_t> buffer;
 
-  const size_t BUFSIZE = 128 * 1024;
+  const size_t BUFSIZE = 1024;
   uint8_t temp_buffer[BUFSIZE];
 
   z_stream strm;
