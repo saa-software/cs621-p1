@@ -364,6 +364,7 @@ PointToPointNetDevice::Receive (Ptr<Packet> packet)
   NS_LOG_FUNCTION (this << packet);
   uint16_t protocol = 0;
 
+
   if (m_receiveErrorModel && m_receiveErrorModel->IsCorrupt (packet) )
     {
       //
@@ -395,12 +396,16 @@ PointToPointNetDevice::Receive (Ptr<Packet> packet)
       // there is no difference in what the promisc callback sees and what the
       // normal receive callback sees.
       //
-    //  std::cout << originalPacket <<std::endl;
       ProcessHeader (packet, protocol);
-    //  std::cout << protocol <<std::endl;
-      // std::cout << packet <<std::endl;
 
       //DECOMPRESS HERE
+      if(m_compressionEnabled)
+        {
+          if(protocol == 0x4021) {
+            std::cout << "HERE in Receive" <<std::endl;
+            //COMPRESS
+          }
+        }
 
       if (!m_promiscCallback.IsNull ())
         {
@@ -560,14 +565,25 @@ PointToPointNetDevice::Send (
     }
 
 
-  // if(m_compressionEnabled)
-  //   {
+  if(m_compressionEnabled)
+    {
+      std::cout << "enabled!!!" <<std::endl;
       //Compress goes Here
-      //std::cout << "inside if" <<std::endl;
-      AddCompHeader(packet, protocolNumber);
-      // std::cout << packet <<std::endl;
+      Ptr<Packet> copy = packet->Copy();
+      PppHeader ppp;
+      copy->RemoveHeader(ppp);
+      if(ppp.GetProtocol() ==0x4021) {
+          std::cout << "HERE!!!" <<std::endl;
+          //decompress
+      }
+
+      AddHeader(packet, 0x4021);
+
       // std::cout << protocolNumber <<std::endl;
-    // }
+    }
+  else {
+    AddHeader(packet, protocolNumber);
+  }
 
   //
   // Stick a point to point protocol header on the packet in preparation for
