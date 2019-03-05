@@ -69,7 +69,7 @@ PointToPointNetDevice::GetTypeId (void)
                    MakeTimeAccessor (&PointToPointNetDevice::m_tInterframeGap),
                    MakeTimeChecker ())
     .AddAttribute ("CompressionEnabled", "Whether to compress data or not",
-                    BooleanValue(false),
+                    BooleanValue(true),
                     MakeBooleanAccessor (&PointToPointNetDevice::SetCompressionEnabled),
                     MakeBooleanChecker ())
 
@@ -183,8 +183,8 @@ PointToPointNetDevice::PointToPointNetDevice ()
     m_channel (0),
     m_linkUp (false),
     m_currentPkt (0),
-    //default compressionEnable is false
-    m_compressionEnabled (false)
+    //default compressionEnable is true
+    m_compressionEnabled (true)
 {
   NS_LOG_FUNCTION (this);
 }
@@ -205,6 +205,18 @@ PointToPointNetDevice::AddHeader (Ptr<Packet> p, uint16_t protocolNumber)
   NS_LOG_FUNCTION (this << p << protocolNumber);
   PppHeader ppp;
   ppp.SetProtocol (EtherToPpp (protocolNumber));
+
+  p->AddHeader (ppp);
+}
+
+void
+PointToPointNetDevice::AddCompHeader (Ptr<Packet> p, uint16_t protocolNumber)
+{
+  NS_LOG_FUNCTION (this << p << protocolNumber);
+  PppHeader ppp;
+  if(EtherToPpp (protocolNumber) == 0x0021) {
+    ppp.SetProtocol (0x4021);
+  }
   p->AddHeader (ppp);
 }
 
@@ -214,7 +226,13 @@ PointToPointNetDevice::ProcessHeader (Ptr<Packet> p, uint16_t& param)
   NS_LOG_FUNCTION (this << p << param);
   PppHeader ppp;
   p->RemoveHeader (ppp);
-  param = PppToEther (ppp.GetProtocol ());
+  // if(ppp.GetProtocol() == 0x4021) {
+  // //  std::cout << "HERE with 4021" <<std::endl;
+  //   param = PppToEther(0x0021);
+  // } else {
+    param = PppToEther (ppp.GetProtocol ());
+  // }
+
   return true;
 }
 
@@ -377,14 +395,20 @@ PointToPointNetDevice::Receive (Ptr<Packet> packet)
       // there is no difference in what the promisc callback sees and what the
       // normal receive callback sees.
       //
+      std::cout << protocol <<std::endl;
       ProcessHeader (packet, protocol);
+      std::cout << protocol <<std::endl;
+      // std::cout << packet <<std::endl;
+
+      //DECOMPRESS HERE
 
       if (!m_promiscCallback.IsNull ())
         {
+          std::cout << "isNulll" <<std::endl;
           m_macPromiscRxTrace (originalPacket);
           m_promiscCallback (this, packet, protocol, GetRemote (), GetAddress (), NetDevice::PACKET_HOST);
         }
-
+        std::cout << "notNul" <<std::endl;
       m_macRxTrace (originalPacket);
       m_rxCallback (this, packet, protocol, GetRemote ());
     }
@@ -535,19 +559,21 @@ PointToPointNetDevice::Send (
       return false;
     }
 
+
   // if(m_compressionEnabled)
   //   {
-      // PppHeader pppHeader;
-      // packet->RemoveHeader(pppHeader);
-      // CompHeader compHeader;
-      // compHeader.SetData(0x4021);
-      // packet->AddHeader(compHeader);
+      //Compress goes Here
+      //std::cout << "inside if" <<std::endl;
+      // AddCompHeader(packet, protocolNumber);
+      // std::cout << packet <<std::endl;
+      // std::cout << protocolNumber <<std::endl;
     // }
 
   //
   // Stick a point to point protocol header on the packet in preparation for
   // shoving it out the door.
   //
+  // std::cout << "outside if" <<std::endl;
   AddHeader (packet, protocolNumber);
 
   m_macTxTrace (packet);

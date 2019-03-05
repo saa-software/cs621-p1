@@ -242,6 +242,9 @@ private:
    */
   void AddHeader (Ptr<Packet> p, uint16_t protocolNumber);
 
+  //
+  void AddCompHeader (Ptr<Packet> p, uint16_t protocolNumber);
+
   /**
    * Removes, from a packet of data, all headers and trailers that
    * relate to the protocol implemented by the agent
@@ -250,6 +253,8 @@ private:
    * \return Returns true if the packet should be forwarded up the
    * protocol stack.
    */
+
+
   bool ProcessHeader (Ptr<Packet> p, uint16_t& param);
 
   /**

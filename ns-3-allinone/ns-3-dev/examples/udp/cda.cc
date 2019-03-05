@@ -29,7 +29,7 @@ using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE ("Cda");
 
-int 
+int
 main (int argc, char *argv[])
 {
 //
@@ -37,6 +37,7 @@ main (int argc, char *argv[])
 // for selected modules; the below lines suggest how to do this
 //
   LogComponentEnable ("Cda", LOG_LEVEL_INFO);
+  //LogComponentEnable("PointToPointNetDevice", LOG_LEVEL_ALL);
   // LogComponentEnable ("CdaClientApplication", LOG_LEVEL_ALL);
   LogComponentEnable ("CdaServerApplication", LOG_LEVEL_ALL);
 
@@ -98,7 +99,7 @@ main (int argc, char *argv[])
 // node three.
 //
   uint32_t packetSize = 1100;
-  uint32_t maxPacketCount = 12000;
+  uint32_t maxPacketCount = 12;
   Time interPacketInterval = MilliSeconds (1);
   CdaClientHelper client (i2i3.GetAddress(1), port);
   client.SetAttribute ("MaxPackets", UintegerValue (maxPacketCount));
@@ -117,7 +118,7 @@ main (int argc, char *argv[])
 // Now, do the actual simulation.
 //
   Simulator::Run ();
-  Simulator:: 
+  Simulator::
   Simulator::Destroy ();
   NS_LOG_INFO ("Done.");
 }
