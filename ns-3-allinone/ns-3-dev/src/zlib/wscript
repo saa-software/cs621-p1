@@ -1,0 +1,16 @@
+## -*- Mode: python; py-indent-offset: 4; indent-tabs-mode: nil; coding: utf-8; -*-
+
+
+def build(bld):
+    module = bld.create_ns3_module('zlib')
+    module.source = [
+        'importTest.cc',
+        ]
+
+    headers = bld(features='ns3header')
+    headers.module = 'zlib'
+    headers.source = [
+        'zlib.h',
+        ]
+
+    bld.ns3_python_bindings()
