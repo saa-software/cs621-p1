@@ -16,6 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <iostream>
 #include "ns3/log.h"
 #include "ns3/ipv4-address.h"
 #include "ns3/ipv6-address.h"
@@ -160,14 +161,14 @@ CdaServer::StopApplication ()
     double t2Time = fabs (m_t2Start - m_t2End);
     double delta = fabs (t1Time - t2Time) * 1000;
 
-    NS_LOG_FUNCTION ("High Entropy Train Time = " << t1Time);
-    NS_LOG_FUNCTION ("Low Entropy Train Time = " << t2Time);
+    std::cout << "High Entropy Train Time = " << t1Time << std::endl;
+    std::cout << "Low Entropy Train Time = " << t2Time << std::endl;
     
     if (delta > 100)
     {
-      NS_LOG_FUNCTION ("Compression detected!");
+      std::cout << "Compression detected!" << std::endl;
     } else {
-      NS_LOG_FUNCTION ("No compression was detected");
+      std::cout << "No compression was detected" << std::endl;
     }
 }
 
