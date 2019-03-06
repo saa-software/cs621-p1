@@ -334,20 +334,37 @@ PointToPointNetDevice::SetReceiveErrorModel (Ptr<ErrorModel> em)
 }
 
 void
-PointToPointNetDevice::Receive (Ptr<Packet> packet)
+PointToPointNetDevice::Receive (Ptr<Packet> incomingPacket)
 {
-  printf("enaled %d\n", m_compressionEnabled);
+  // printf("enaled %d\n", m_compressionEnabled);
   PppHeader ppp;
-  packet->PeekHeader (ppp);
-  printf("recv protocol: %d\n",ppp.GetProtocol ());
-  if (m_compressionEnabled == 1 && ppp.GetProtocol () == 16417) {
-    printf("HERE___________________________________________________________________");
-    packet = DecompressPacket (packet);
-  }
-  printf("recv decompress protocol: %d\n", ppp.GetProtocol ());
-  PppHeader pppTest;
-  packet->PeekHeader (pppTest);
-  printf("recv test decompress protocol: %d\n", pppTest.GetProtocol ());
+  incomingPacket->PeekHeader (ppp);
+  printf ("Recv protocol: %d\n", ppp.GetProtocol ());
+  Ptr<Packet> packet;
+  if (m_compressionEnabled == 1)
+    {
+      if (ppp.GetProtocol () == 16417)
+        {
+          printf ("########################## DECOMPRESS ##########################\n");
+          packet = DecompressPacket (incomingPacket);
+        }
+      else if (ppp.GetProtocol () == 33)
+        {
+          printf ("##########################  COMPRESS  ##########################\n");
+          packet = CompressPacket (incomingPacket);
+        }
+    }
+  else
+    {
+      packet = incomingPacket->Copy ();
+    }
+
+  PppHeader ppp2;
+  packet->PeekHeader (ppp2);
+  printf ("Post action protocol: %d\n", ppp2.GetProtocol ());
+  // PppHeader pppTest;
+  // packet->PeekHeader (pppTest);
+  // printf ("recv test decompress protocol: %d\n", pppTest.GetProtocol ());
 
   NS_LOG_FUNCTION (this << packet);
   uint16_t protocol = 0;
@@ -537,9 +554,11 @@ PointToPointNetDevice::Send (Ptr<Packet> packet, const Address &dest, uint16_t p
 
   PppHeader ppp;
   packet->PeekHeader (ppp);
-  if (m_compressionEnabled == 1 && ppp.GetProtocol () == 33) {
-    packet = CompressPacket(packet);
-  }
+  printf ("Send protocol: %d\n", ppp.GetProtocol ());
+  // if (m_compressionEnabled == 1 && ppp.GetProtocol () == 33) {
+  //   printf("HERE2_________________________2");
+  //   packet = CompressPacket(packet);
+  // }
 
   //
   // If IsLinkUp() is false it means there is no channel to send any packet
@@ -627,8 +646,8 @@ PointToPointNetDevice::SetPromiscReceiveCallback (NetDevice::PromiscReceiveCallb
 Ptr<Packet>
 PointToPointNetDevice::CompressPacket (Ptr<Packet> packet)
 {
-  printf ("Compress\n");
-  printf ("Size of packet: %d\n", packet->GetSize ());
+  // printf ("Compress\n");
+  // printf ("Size of packet: %d\n", packet->GetSize ());
 
   // PppHeader ppp;
   // packet->PeekHeader (ppp);
@@ -684,12 +703,13 @@ PointToPointNetDevice::CompressPacket (Ptr<Packet> packet)
   deflateEnd (&strm);
 
   Ptr<Packet> compPacket = Create<Packet> (temp_buffer, destSize);
-  printf ("size of compressed packet: %d\n", compPacket->GetSize ());
+  // printf ("size of compressed packet: %d\n", compPacket->GetSize ());
 
   PppHeader ppp2;
-  compPacket->PeekHeader (ppp2);
-  ppp2.SetProtocol (0x4021);
-  printf("after set protocol %d\n", ppp2.GetProtocol ());
+  compPacket->RemoveHeader (ppp2);
+  ppp2.SetProtocol (0x4021);\
+  compPacket->AddHeader (ppp2);
+  // printf ("after set protocol %d\n", ppp2.GetProtocol ());
 
   return compPacket;
 }
@@ -697,8 +717,8 @@ PointToPointNetDevice::CompressPacket (Ptr<Packet> packet)
 Ptr<Packet>
 PointToPointNetDevice::DecompressPacket (Ptr<Packet> packet)
 {
-  printf ("Decompress:\n");
-  printf ("Size of packet: %d\n", packet->GetSize ());
+  // printf ("Decompress:\n");
+  // printf ("Size of packet: %d\n", packet->GetSize ());
 
   char *data;
   data = (char *) &packet;
@@ -724,10 +744,10 @@ PointToPointNetDevice::DecompressPacket (Ptr<Packet> packet)
   inflateEnd (&infstream);
 
   PppHeader ppp2;
-  Ptr<Packet> decompPacket = Create<Packet> (temp_buffer, sizeof(temp_buffer));
+  Ptr<Packet> decompPacket = Create<Packet> (temp_buffer, sizeof (temp_buffer));
   decompPacket->PeekHeader (ppp2);
   ppp2.SetProtocol (0x0021);
-  printf ("size of decompressed packet: %d\n", decompPacket->GetSize ());
+  // printf ("size of decompressed packet: %d\n", decompPacket->GetSize ());
 
   return decompPacket;
 }
@@ -789,6 +809,7 @@ PointToPointNetDevice::PppToEther (uint16_t proto)
       return 0x0800; //IPv4
     case 0x0057:
       return 0x86DD; //IPv6
+    case 
     default:
       NS_ASSERT_MSG (false, "PPP Protocol number not defined!");
     }
