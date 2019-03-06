@@ -351,18 +351,10 @@ PointToPointNetDevice::SetReceiveErrorModel (Ptr<ErrorModel> em)
 void
 PointToPointNetDevice::Receive (Ptr<Packet> packet)
 {
-  printf("enaled %d\n", m_compressionEnabled);
-  PppHeader ppp;
-  packet->PeekHeader (ppp);
-  printf("recv protocol: %d\n",ppp.GetProtocol ());
-  if (m_compressionEnabled == 1 && ppp.GetProtocol () == 16417) {
-    printf("HERE___________________________________________________________________");
-    packet = DecompressPacket (packet);
-  }
-  printf("recv decompress protocol: %d\n", ppp.GetProtocol ());
-  PppHeader pppTest;
-  packet->PeekHeader (pppTest);
-  printf("recv test decompress protocol: %d\n", pppTest.GetProtocol ());
+
+  printf("inReceive\n");
+  packet->Print(std::cout);
+  std::cout << std::endl;
 
   NS_LOG_FUNCTION (this << packet);
   uint16_t protocol = 0;
@@ -407,40 +399,28 @@ PointToPointNetDevice::Receive (Ptr<Packet> packet)
       // packet->Print (std::cout);
       // std::cout << std::endl;
       //DECOMPRESS HERE
-      if(m_compressionEnabled)
+      PppHeader ppp;
+      packet->PeekHeader (ppp);
+      printf("recv protocol: %d\n",ppp.GetProtocol ());
+
+
+      if(m_compressionEnabled && ppp.GetProtocol() ==0x4021) //received compressed packet
         {
 
-          Ptr<Packet> originalPacket = packet->Copy ();
-          PppHeader ppp;
-          originalPacket->RemoveHeader (ppp);
-            std::cout << ppp.GetProtocol() <<std::endl;
-          if(ppp.GetProtocol() != 0x4021) {
+          packet->RemoveHeader(ppp);
+          printf("HERE_DECOMPRESS__________________________________________________________________\n");
+          DecompressPacket (packet);
+          printf("packet Size after decompress: %d\n", packet->GetSize());
+          printf("recv decompress protocol: %d\n", ppp.GetProtocol ());
+          PppHeader pppTest;
+          packet->PeekHeader (pppTest);
+          printf("recv test decompress protocol: %d\n", pppTest.GetProtocol ());
 
-            Ptr<Packet> originalPacket2 = packet->Copy ();
-            ProcessHeader(packet, protocol);
-          //TODO: change hardcoded
-
-
-            // AddHeader(packet, 0x0800);
-          //  PreprocessPacket(packet);
-
-              // std::cout << std::endl;
-              packet->Print (std::cout);
-              std::cout << std::endl;
-            CompressPacket(originalPacket2);
-          //  AddHeader(packet, 0x4021);
-            std::cout <<"originalPacket2" <<std::endl;
-            originalPacket2->Print (std::cout);
-            std::cout << std::endl;
-          } else {
-            //std::cout <<"recv decomp"<< std::endl;
-            ProcessHeader(packet, protocol);
-
-          }
         }
       else {
-          ProcessHeader (packet, protocol);
+        ProcessHeader(packet, protocol);
       }
+
 
       if (!m_promiscCallback.IsNull ())
         {
@@ -586,11 +566,14 @@ PointToPointNetDevice::Send (Ptr<Packet> packet, const Address &dest, uint16_t p
   NS_LOG_LOGIC ("p=" << packet << ", dest=" << &dest);
   NS_LOG_LOGIC ("UID is " << packet->GetUid ());
 
-  PppHeader ppp;
-  packet->PeekHeader (ppp);
-  if (m_compressionEnabled == 1 && ppp.GetProtocol () == 33) {
-    packet = CompressPacket(packet);
-  }
+  printf("inSend -Begin\n");
+  packet->Print(std::cout);
+  std::cout << std::endl;//
+  // PppHeader ppp;
+  // packet->PeekHeader (ppp);
+  // if (m_compressionEnabled == 1 && ppp.GetProtocol () == 33) {
+  //   packet = CompressPacket(packet);
+  // }
 
   //
   // If IsLinkUp() is false it means there is no channel to send any packet
@@ -601,6 +584,9 @@ PointToPointNetDevice::Send (Ptr<Packet> packet, const Address &dest, uint16_t p
       m_macTxDropTrace (packet);
       return false;
     }
+    PppHeader ppp1;
+    packet->PeekHeader (ppp1);
+    printf("send protocol: %d\n",ppp1.GetProtocol ());
 
   if(m_compressionEnabled)
     {
@@ -612,19 +598,21 @@ PointToPointNetDevice::Send (Ptr<Packet> packet, const Address &dest, uint16_t p
       // std::cout <<"IN SEND!!" <<std::endl;
       // packet->Print (std::cout);
       // std::cout << std::endl;
-
-      Ptr<Packet> originalPacket = packet->Copy ();
-      PppHeader ppp;
-      originalPacket->RemoveHeader (ppp);
-
-      if(ppp.GetProtocol() == 0x4021) {
-          std::cout << "inside Send before decompres" <<std::endl;
-          DecompressPacket(packet);
-          // AddHeader(packet, protocolNumber);
-      } else {
-        std::cout << "else " << protocolNumber <<std::endl;
+      if(ppp1.GetProtocol() ==17664) //when no new PPP header
+      {
+        CompressPacket(packet);
+        printf("COMPRESSED_______________________________________________\n");
+        PppHeader ppp2;
+        ppp2.SetProtocol(0x4021);
+        packet->AddHeader(ppp2);
+        printf("send compr packet size : %d\n", packet->GetSize());
+      //  printf("after set protocol %d\n", ppp2.GetProtocol ());
+        printf("inSend -end\n");
+        packet->Print(std::cout);
+        std::cout << std::endl;//
+      }
+      else {
         AddHeader(packet, protocolNumber);
-
       }
 
       // std::cout << protocolNumber <<std::endl;
@@ -769,10 +757,10 @@ PointToPointNetDevice::CompressPacket (Ptr<Packet> packet)
   Ptr<Packet> compPacket = Create<Packet> (temp_buffer, destSize);
   printf ("size of compressed packet: %d\n", compPacket->GetSize ());
 
-  PppHeader ppp2;
-  compPacket->PeekHeader (ppp2);
-  ppp2.SetProtocol (0x4021);
-  printf("after set protocol %d\n", ppp2.GetProtocol ());
+  // PppHeader ppp2;
+  // compPacket->PeekHeader (ppp2);
+  // ppp2.SetProtocol (0x4021);
+  // printf("after set protocol %d\n", ppp2.GetProtocol ());
 
   return compPacket;
 }
@@ -866,6 +854,7 @@ uint16_t
 PointToPointNetDevice::PppToEther (uint16_t proto)
 {
   NS_LOG_FUNCTION_NOARGS ();
+  printf("in PPPtoEther, proto is : %d\n", proto);
   switch (proto)
     {
     case 0x0021:
@@ -884,6 +873,7 @@ PointToPointNetDevice::EtherToPpp (uint16_t proto)
   NS_LOG_FUNCTION_NOARGS ();
   switch (proto)
     {
+
     case 0x0800:
       return 0x0021; //IPv4
     case 0x86DD:
