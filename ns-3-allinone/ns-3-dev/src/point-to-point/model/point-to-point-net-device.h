@@ -148,7 +148,6 @@ public:
    * \param p Ptr to the received packet.
    */
   void Receive (Ptr<Packet> p);
-  void PreprocessPacket(Ptr<Packet> packet);
 
   // The remaining methods are documented in ns3::NetDevice*
 
@@ -245,7 +244,6 @@ private:
    */
   void AddHeader (Ptr<Packet> p, uint16_t protocolNumber);
 
-  void AddCompHeader (Ptr<Packet> p, uint16_t protocolNumber);
   /**
    * Removes, from a packet of data, all headers and trailers that
    * relate to the protocol implemented by the agent
@@ -258,7 +256,6 @@ private:
 
   bool ProcessHeader (Ptr<Packet> p, uint16_t& param);
 
-  bool ProcessCompHeader (Ptr<Packet> p, uint16_t& param);
 
 
   /**
@@ -484,7 +481,6 @@ private:
    */
   static uint16_t EtherToPpp (uint16_t protocol);
 
-  static uint16_t CompEtherToPpp (uint16_t proto);
 };
 
 } // namespace ns3

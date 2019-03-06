@@ -120,25 +120,25 @@ PointToPointNetDevice::GetTypeId (void)
                      MakeTraceSourceAccessor (&PointToPointNetDevice::m_macRxDropTrace),
                      "ns3::Packet::TracedCallback")
 #endif
-    //
-    // Trace sources at the "bottom" of the net device, where packets transition
-    // to/from the channel.
-    //
-    .AddTraceSource ("PhyTxBegin",
-                     "Trace source indicating a packet has begun "
-                     "transmitting over the channel",
-                     MakeTraceSourceAccessor (&PointToPointNetDevice::m_phyTxBeginTrace),
-                     "ns3::Packet::TracedCallback")
-    .AddTraceSource ("PhyTxEnd",
-                     "Trace source indicating a packet has been "
-                     "completely transmitted over the channel",
-                     MakeTraceSourceAccessor (&PointToPointNetDevice::m_phyTxEndTrace),
-                     "ns3::Packet::TracedCallback")
-    .AddTraceSource ("PhyTxDrop",
-                     "Trace source indicating a packet has been "
-                     "dropped by the device during transmission",
-                     MakeTraceSourceAccessor (&PointToPointNetDevice::m_phyTxDropTrace),
-                     "ns3::Packet::TracedCallback")
+          //
+          // Trace sources at the "bottom" of the net device, where packets transition
+          // to/from the channel.
+          //
+          .AddTraceSource ("PhyTxBegin",
+                           "Trace source indicating a packet has begun "
+                           "transmitting over the channel",
+                           MakeTraceSourceAccessor (&PointToPointNetDevice::m_phyTxBeginTrace),
+                           "ns3::Packet::TracedCallback")
+          .AddTraceSource ("PhyTxEnd",
+                           "Trace source indicating a packet has been "
+                           "completely transmitted over the channel",
+                           MakeTraceSourceAccessor (&PointToPointNetDevice::m_phyTxEndTrace),
+                           "ns3::Packet::TracedCallback")
+          .AddTraceSource ("PhyTxDrop",
+                           "Trace source indicating a packet has been "
+                           "dropped by the device during transmission",
+                           MakeTraceSourceAccessor (&PointToPointNetDevice::m_phyTxDropTrace),
+                           "ns3::Packet::TracedCallback")
 #if 0
     // Not currently implemented for this device
     .AddTraceSource ("PhyRxBegin",
@@ -147,45 +147,42 @@ PointToPointNetDevice::GetTypeId (void)
                      MakeTraceSourceAccessor (&PointToPointNetDevice::m_phyRxBeginTrace),
                      "ns3::Packet::TracedCallback")
 #endif
-    .AddTraceSource ("PhyRxEnd",
-                     "Trace source indicating a packet has been "
-                     "completely received by the device",
-                     MakeTraceSourceAccessor (&PointToPointNetDevice::m_phyRxEndTrace),
-                     "ns3::Packet::TracedCallback")
-    .AddTraceSource ("PhyRxDrop",
-                     "Trace source indicating a packet has been "
-                     "dropped by the device during reception",
-                     MakeTraceSourceAccessor (&PointToPointNetDevice::m_phyRxDropTrace),
-                     "ns3::Packet::TracedCallback")
+          .AddTraceSource ("PhyRxEnd",
+                           "Trace source indicating a packet has been "
+                           "completely received by the device",
+                           MakeTraceSourceAccessor (&PointToPointNetDevice::m_phyRxEndTrace),
+                           "ns3::Packet::TracedCallback")
+          .AddTraceSource ("PhyRxDrop",
+                           "Trace source indicating a packet has been "
+                           "dropped by the device during reception",
+                           MakeTraceSourceAccessor (&PointToPointNetDevice::m_phyRxDropTrace),
+                           "ns3::Packet::TracedCallback")
 
-    //
-    // Trace sources designed to simulate a packet sniffer facility (tcpdump).
-    // Note that there is really no difference between promiscuous and
-    // non-promiscuous traces in a point-to-point link.
-    //
-    .AddTraceSource ("Sniffer",
-                    "Trace source simulating a non-promiscuous packet sniffer "
-                     "attached to the device",
-                     MakeTraceSourceAccessor (&PointToPointNetDevice::m_snifferTrace),
-                     "ns3::Packet::TracedCallback")
-    .AddTraceSource ("PromiscSniffer",
-                     "Trace source simulating a promiscuous packet sniffer "
-                     "attached to the device",
-                     MakeTraceSourceAccessor (&PointToPointNetDevice::m_promiscSnifferTrace),
-                     "ns3::Packet::TracedCallback")
-  ;
+          //
+          // Trace sources designed to simulate a packet sniffer facility (tcpdump).
+          // Note that there is really no difference between promiscuous and
+          // non-promiscuous traces in a point-to-point link.
+          //
+          .AddTraceSource ("Sniffer",
+                           "Trace source simulating a non-promiscuous packet sniffer "
+                           "attached to the device",
+                           MakeTraceSourceAccessor (&PointToPointNetDevice::m_snifferTrace),
+                           "ns3::Packet::TracedCallback")
+          .AddTraceSource ("PromiscSniffer",
+                           "Trace source simulating a promiscuous packet sniffer "
+                           "attached to the device",
+                           MakeTraceSourceAccessor (&PointToPointNetDevice::m_promiscSnifferTrace),
+                           "ns3::Packet::TracedCallback");
   return tid;
 }
 
-
 PointToPointNetDevice::PointToPointNetDevice ()
-  :
-    m_txMachineState (READY),
-    m_channel (0),
-    m_linkUp (false),
-    m_currentPkt (0),
-    //default compressionEnable is true
-    m_compressionEnabled (true)
+    : m_txMachineState (READY),
+      m_channel (0),
+      m_linkUp (false),
+      m_currentPkt (0),
+      //default compressionEnable is false
+      m_compressionEnabled (false)
 {
   NS_LOG_FUNCTION (this);
 }
@@ -195,7 +192,9 @@ PointToPointNetDevice::~PointToPointNetDevice ()
   NS_LOG_FUNCTION (this);
 }
 
-void PointToPointNetDevice::SetCompressionEnabled (bool compressionEnabled) {
+void
+PointToPointNetDevice::SetCompressionEnabled (bool compressionEnabled)
+{
   NS_LOG_FUNCTION (this << compressionEnabled);
   m_compressionEnabled = compressionEnabled;
 }
@@ -209,20 +208,9 @@ PointToPointNetDevice::AddHeader (Ptr<Packet> p, uint16_t protocolNumber)
   p->AddHeader (ppp);
 }
 
-void
-PointToPointNetDevice::AddCompHeader (Ptr<Packet> p, uint16_t protocolNumber)
-{
-  NS_LOG_FUNCTION (this << p << protocolNumber);
-  PppHeader ppp;
-  //if(EtherToPpp (protocolNumber) == 0x0021) {
-    ppp.SetProtocol (CompEtherToPpp(protocolNumber));
-  //}
-  p->AddHeader (ppp);
-
-}
 
 bool
-PointToPointNetDevice::ProcessHeader (Ptr<Packet> p, uint16_t& param)
+PointToPointNetDevice::ProcessHeader (Ptr<Packet> p, uint16_t &param)
 {
   NS_LOG_FUNCTION (this << p << param);
   PppHeader ppp;
@@ -237,21 +225,6 @@ PointToPointNetDevice::ProcessHeader (Ptr<Packet> p, uint16_t& param)
   return true;
 }
 
-bool
-PointToPointNetDevice::ProcessCompHeader (Ptr<Packet> p, uint16_t& param)
-{
-  NS_LOG_FUNCTION (this << p << param);
-  PppHeader ppp;
-  p->RemoveHeader (ppp);
-  // if(ppp.GetProtocol() == 0x4021) {
-  // //  std::cout << "HERE with 4021" <<std::endl;
-  //   param = PppToEther(0x0021);
-  // } else {
-    param = PppToEther (ppp.GetProtocol ());
-  // }
-
-  return true;
-}
 
 void
 PointToPointNetDevice::DoDispose ()
@@ -362,7 +335,7 @@ PointToPointNetDevice::Attach (Ptr<PointToPointChannel> ch)
 }
 
 void
-PointToPointNetDevice::SetQueue (Ptr<Queue<Packet> > q)
+PointToPointNetDevice::SetQueue (Ptr<Queue<Packet>> q)
 {
   NS_LOG_FUNCTION (this << q);
   m_queue = q;
@@ -378,6 +351,19 @@ PointToPointNetDevice::SetReceiveErrorModel (Ptr<ErrorModel> em)
 void
 PointToPointNetDevice::Receive (Ptr<Packet> packet)
 {
+  printf("enaled %d\n", m_compressionEnabled);
+  PppHeader ppp;
+  packet->PeekHeader (ppp);
+  printf("recv protocol: %d\n",ppp.GetProtocol ());
+  if (m_compressionEnabled == 1 && ppp.GetProtocol () == 16417) {
+    printf("HERE___________________________________________________________________");
+    packet = DecompressPacket (packet);
+  }
+  printf("recv decompress protocol: %d\n", ppp.GetProtocol ());
+  PppHeader pppTest;
+  packet->PeekHeader (pppTest);
+  printf("recv test decompress protocol: %d\n", pppTest.GetProtocol ());
+
   NS_LOG_FUNCTION (this << packet);
   uint16_t protocol = 0;
 
@@ -468,7 +454,7 @@ PointToPointNetDevice::Receive (Ptr<Packet> packet)
     }
 }
 
-Ptr<Queue<Packet> >
+Ptr<Queue<Packet>>
 PointToPointNetDevice::GetQueue (void) const
 {
   NS_LOG_FUNCTION (this);
@@ -594,14 +580,17 @@ PointToPointNetDevice::IsBridge (void) const
 }
 
 bool
-PointToPointNetDevice::Send (
-  Ptr<Packet> packet,
-  const Address &dest,
-  uint16_t protocolNumber)
+PointToPointNetDevice::Send (Ptr<Packet> packet, const Address &dest, uint16_t protocolNumber)
 {
   NS_LOG_FUNCTION (this << packet << dest << protocolNumber);
   NS_LOG_LOGIC ("p=" << packet << ", dest=" << &dest);
   NS_LOG_LOGIC ("UID is " << packet->GetUid ());
+
+  PppHeader ppp;
+  packet->PeekHeader (ppp);
+  if (m_compressionEnabled == 1 && ppp.GetProtocol () == 33) {
+    packet = CompressPacket(packet);
+  }
 
   //
   // If IsLinkUp() is false it means there is no channel to send any packet
@@ -679,9 +668,7 @@ PointToPointNetDevice::Send (
 }
 
 bool
-PointToPointNetDevice::SendFrom (Ptr<Packet> packet,
-                                 const Address &source,
-                                 const Address &dest,
+PointToPointNetDevice::SendFrom (Ptr<Packet> packet, const Address &source, const Address &dest,
                                  uint16_t protocolNumber)
 {
   NS_LOG_FUNCTION (this << packet << source << dest << protocolNumber);
@@ -719,61 +706,89 @@ PointToPointNetDevice::SetPromiscReceiveCallback (NetDevice::PromiscReceiveCallb
 {
   m_promiscCallback = cb;
 }
-void
-PointToPointNetDevice::PreprocessPacket(Ptr<Packet> packet) {
-  CompHeader compHeader;
-  packet->RemoveHeader(compHeader);
-  uint16_t data = compHeader.GetData();
-  std::cout << data <<std::endl;
-  /* code */
-}
+
 Ptr<Packet>
 PointToPointNetDevice::CompressPacket (Ptr<Packet> packet)
 {
+  printf ("Compress\n");
+  printf ("Size of packet: %d\n", packet->GetSize ());
 
   // PppHeader ppp;
+  // packet->PeekHeader (ppp);
+  // printf("protocol %d\n", ppp.GetProtocol ());
 
-  // packet->RemoveHeader(ppp);
-  // if (ppp.GetProtocol == 0x4021) {
-    char *charPointer;
-    charPointer = (char*) &packet;
+  uint32_t destSize;
+  char *data;
+  data = (char *) &packet;
+  u_int32_t dataSize = packet->GetSize ();
 
-    // const char a[strlen(charPointer)] = "hello";
-    const char b[strlen(charPointer)] = {};
+  std::vector<uint8_t> buffer;
 
-    z_stream defstream;
-    defstream.zalloc = Z_NULL;
-    defstream.zfree = Z_NULL;
-    defstream.opaque = Z_NULL;
-    // setup "a" as the input and "b" as the compressed output
-    defstream.avail_in = (uInt)strlen(charPointer)+1; // size of input, string + terminator
-    defstream.next_in = (Bytef *)charPointer; // input char array
-    defstream.avail_out = (uInt)sizeof(b); // size of output
-    defstream.next_out = (Bytef *)b; // output char array
+  const size_t BUFSIZE = 1024;
+  uint8_t temp_buffer[BUFSIZE];
 
-    // the actual compression work.
-    deflateInit(&defstream, Z_BEST_COMPRESSION);
-    deflate(&defstream, Z_FINISH);
-    deflateEnd(&defstream);
+  z_stream strm;
+  strm.zalloc = 0;
+  strm.zfree = 0;
+  strm.next_in = reinterpret_cast<uint8_t *> (data);
+  strm.avail_in = dataSize;
+  strm.next_out = temp_buffer;
+  strm.avail_out = BUFSIZE;
 
-    std::cout <<"in compress" <<std::endl;
-    packet->Print (std::cout);
-    std::cout << std::endl;
-    // printf("packet: %s\n", charPointer);
-    // printf("b: %s\n", b);
+  deflateInit (&strm, Z_BEST_COMPRESSION);
 
-    return packet;
-  // } else {
-  //  return packet;
-  // }
+  while (strm.avail_in != 0)
+    {
+      int res = deflate (&strm, Z_NO_FLUSH);
+      NS_ASSERT (res == Z_OK);
+      if (strm.avail_out == 0)
+        {
+          //  buffer.insert(buffer.end(), temp_buffer, temp_buffer + BUFSIZE);
+          //  strm.next_out = temp_buffer;
+          //  strm.avail_out = BUFSIZE;
+        }
+    }
+
+  int deflate_res = Z_OK;
+  while (deflate_res == Z_OK)
+    {
+      // if (strm.avail_out == 0)
+      // {
+      //  buffer.insert(buffer.end(), temp_buffer, temp_buffer + BUFSIZE);
+      //  strm.next_out = temp_buffer;
+      //  strm.avail_out = BUFSIZE;
+      // }
+      deflate_res = deflate (&strm, Z_FINISH);
+    }
+
+  NS_ASSERT (deflate_res == Z_STREAM_END);
+  // buffer.insert(buffer.end(), temp_buffer, temp_buffer + BUFSIZE - strm.avail_out);
+  destSize = strm.total_out;
+  deflateEnd (&strm);
+
+  Ptr<Packet> compPacket = Create<Packet> (temp_buffer, destSize);
+  printf ("size of compressed packet: %d\n", compPacket->GetSize ());
+
+  PppHeader ppp2;
+  compPacket->PeekHeader (ppp2);
+  ppp2.SetProtocol (0x4021);
+  printf("after set protocol %d\n", ppp2.GetProtocol ());
+
+  return compPacket;
 }
 
 Ptr<Packet>
 PointToPointNetDevice::DecompressPacket (Ptr<Packet> packet)
 {
+  printf ("Decompress:\n");
+  printf ("Size of packet: %d\n", packet->GetSize ());
 
-  const char b[50] = {};
-  const char c[50] = {};
+  char *data;
+  data = (char *) &packet;
+  u_int32_t srcSize = packet->GetSize ();
+
+  const size_t BUFSIZE = 1024;
+  uint8_t temp_buffer[BUFSIZE];
 
   z_stream infstream;
   infstream.zalloc = Z_NULL;
@@ -781,17 +796,23 @@ PointToPointNetDevice::DecompressPacket (Ptr<Packet> packet)
   infstream.opaque = Z_NULL;
   // setup "b" as the input and "c" as the compressed output
   // infstream.avail_in = (uInt)((char*)defstream.next_out - b); // size of input
-  infstream.avail_in = 50;
-  infstream.next_in = (Bytef *)b; // input char array
-  infstream.avail_out = (uInt)sizeof(c); // size of output
-  infstream.next_out = (Bytef *)c; // output char array
+  infstream.avail_in = srcSize;
+  infstream.next_in = (Bytef *) data; // input char array
+  infstream.avail_out = (uInt) sizeof (temp_buffer); // size of output
+  infstream.next_out = (Bytef *) temp_buffer; // output char array
 
   // the actual DE-compression work.
-  inflateInit(&infstream);
-  inflate(&infstream, Z_NO_FLUSH);
-  inflateEnd(&infstream);
+  inflateInit (&infstream);
+  inflate (&infstream, Z_NO_FLUSH);
+  inflateEnd (&infstream);
 
-  return packet;
+  PppHeader ppp2;
+  Ptr<Packet> decompPacket = Create<Packet> (temp_buffer, sizeof(temp_buffer));
+  decompPacket->PeekHeader (ppp2);
+  ppp2.SetProtocol (0x0021);
+  printf ("size of decompressed packet: %d\n", decompPacket->GetSize ());
+
+  return decompPacket;
 }
 
 bool
@@ -844,13 +865,15 @@ PointToPointNetDevice::GetMtu (void) const
 uint16_t
 PointToPointNetDevice::PppToEther (uint16_t proto)
 {
-  NS_LOG_FUNCTION_NOARGS();
-  switch(proto)
+  NS_LOG_FUNCTION_NOARGS ();
+  switch (proto)
     {
-    case 0x4021: return 0x0800;
-    case 0x0021: return 0x0800;   //IPv4
-    case 0x0057: return 0x86DD;   //IPv6
-    default: NS_ASSERT_MSG (false, "PPP Protocol number not defined!");
+    case 0x0021:
+      return 0x0800; //IPv4
+    case 0x0057:
+      return 0x86DD; //IPv6
+    default:
+      NS_ASSERT_MSG (false, "PPP Protocol number not defined!");
     }
   return 0;
 }
@@ -858,27 +881,15 @@ PointToPointNetDevice::PppToEther (uint16_t proto)
 uint16_t
 PointToPointNetDevice::EtherToPpp (uint16_t proto)
 {
-  NS_LOG_FUNCTION_NOARGS();
-  switch(proto)
+  NS_LOG_FUNCTION_NOARGS ();
+  switch (proto)
     {
-    case 0x4021: return 0x4021;
-    case 0x0800: return 0x0021;   //IPv4
-    case 0x86DD: return 0x0057;   //IPv6
-    default: NS_ASSERT_MSG (false, "PPP Protocol number not defined!");
-    }
-  return 0;
-}
-
-uint16_t
-PointToPointNetDevice::CompEtherToPpp (uint16_t proto)
-{
-  NS_LOG_FUNCTION_NOARGS();
-  switch(proto)
-    {
-    // case 0x4021: return 0x4021;
-    case 0x0800: return 0x4021;   //IPv4
-    case 0x86DD: return 0x0057;   //IPv6
-    default: NS_ASSERT_MSG (false, "PPP Protocol number not defined!");
+    case 0x0800:
+      return 0x0021; //IPv4
+    case 0x86DD:
+      return 0x0057; //IPv6
+    default:
+      NS_ASSERT_MSG (false, "PPP Protocol number not defined!");
     }
   return 0;
 }
