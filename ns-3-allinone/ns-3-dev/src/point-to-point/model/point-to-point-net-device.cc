@@ -336,11 +336,12 @@ PointToPointNetDevice::SetReceiveErrorModel (Ptr<ErrorModel> em)
 void
 PointToPointNetDevice::Receive (Ptr<Packet> packet)
 {
-
+  printf("enaled %d\n", m_compressionEnabled);
   PppHeader ppp;
   packet->PeekHeader (ppp);
   printf("recv protocol: %d\n",ppp.GetProtocol ());
-  if (ppp.GetProtocol () == 16417) {
+  if (m_compressionEnabled == 1 && ppp.GetProtocol () == 16417) {
+    printf("HERE___________________________________________________________________");
     packet = DecompressPacket (packet);
   }
   printf("recv decompress protocol: %d\n", ppp.GetProtocol ());
@@ -351,11 +352,11 @@ PointToPointNetDevice::Receive (Ptr<Packet> packet)
   NS_LOG_FUNCTION (this << packet);
   uint16_t protocol = 0;
 
-  CompressPacket (packet);
-  uint32_t size = 1024;
-  Ptr<Packet> p = Create<Packet> (size);
-  printf ("test packet: %d\n", p->GetSize ());
-  CompressPacket (p);
+  // CompressPacket (packet);
+  // uint32_t size = 1024;
+  // Ptr<Packet> p = Create<Packet> (size);
+  // printf ("test packet: %d\n", p->GetSize ());
+  // CompressPacket (p);
 
   if (m_receiveErrorModel && m_receiveErrorModel->IsCorrupt (packet))
     {
@@ -536,7 +537,7 @@ PointToPointNetDevice::Send (Ptr<Packet> packet, const Address &dest, uint16_t p
 
   PppHeader ppp;
   packet->PeekHeader (ppp);
-  if (ppp.GetProtocol () == 33) {
+  if (m_compressionEnabled == 1 && ppp.GetProtocol () == 33) {
     packet = CompressPacket(packet);
   }
 

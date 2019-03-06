@@ -43,7 +43,8 @@ main (int argc, char *argv[])
   CommandLine cmd;
 
   uint32_t capacity = 1;
-  bool compressionEnabled = 0;
+  bool compressionEnabled = 1;
+  printf("COMPENABLED: %d\n", compressionEnabled);
 
   cmd.AddValue("capacity", "Capacity of compression link in Mbps", capacity);
   cmd.AddValue("compressionEnabled", "Enable or disable compression link", compressionEnabled);
