@@ -62,13 +62,21 @@ main (int argc, char *argv[])
   NodeContainer n1n2 = NodeContainer (n.Get(1), n.Get(2));
   NodeContainer n2n3 = NodeContainer (n.Get(2), n.Get(3));
 
-  PointToPointHelper p2p;
-  p2p.SetDeviceAttribute ("DataRate", StringValue ("8Mbps"));
-  p2p.SetDeviceAttribute ("CompressionEnabled", BooleanValue(compressionEnabled));
+  PointToPointHelper p2p1;
+  p2p1.SetDeviceAttribute ("DataRate", StringValue ("8Mbps"));
+  p2p1.SetDeviceAttribute ("CompressionEnabled", BooleanValue(!compressionEnabled));
+  
+  PointToPointHelper p2p2;
+  p2p2.SetDeviceAttribute ("DataRate", StringValue ("8Mbps"));
+  p2p2.SetDeviceAttribute ("CompressionEnabled", BooleanValue(compressionEnabled));
 
-  NetDeviceContainer p0p1 = p2p.Install (n0n1);
-  NetDeviceContainer p1p2 = p2p.Install (n1n2);
-  NetDeviceContainer p2p3 = p2p.Install (n2n3);
+  PointToPointHelper p2p3;
+  p2p3.SetDeviceAttribute ("DataRate", StringValue ("8Mbps"));
+  p2p3.SetDeviceAttribute ("CompressionEnabled", BooleanValue(!compressionEnabled));
+
+  NetDeviceContainer c0c1 = p2p1.Install (n0n1);
+  NetDeviceContainer c1c2 = p2p2.Install (n1n2);
+  NetDeviceContainer c2c3 = p2p3.Install (n2n3);
 
   InternetStackHelper stack;
   stack.Install (n);
@@ -76,9 +84,9 @@ main (int argc, char *argv[])
   Ipv4AddressHelper address;
   address.SetBase ("10.1.1.0", "255.255.255.0");
 
-  Ipv4InterfaceContainer i0i1 = address.Assign (p0p1);
-  Ipv4InterfaceContainer i1i2 = address.Assign (p1p2);
-  Ipv4InterfaceContainer i2i3 = address.Assign (p2p3);
+  Ipv4InterfaceContainer i0i1 = address.Assign (c0c1);
+  Ipv4InterfaceContainer i1i2 = address.Assign (c1c2);
+  Ipv4InterfaceContainer i2i3 = address.Assign (c2c3);
 
   Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
 
@@ -98,7 +106,7 @@ main (int argc, char *argv[])
 // Create a CdaClient application to send UDP datagrams from node zero to
 // node three.
 //
-  uint32_t packetSize = 1100;
+  uint32_t packetSize = 1024;
   uint32_t maxPacketCount = 10;
   Time interPacketInterval = MilliSeconds (1);
   CdaClientHelper client (i2i3.GetAddress(1), port);
@@ -112,7 +120,12 @@ main (int argc, char *argv[])
 
   AsciiTraceHelper ascii;
   // p2p.EnableAsciiAll (ascii.CreateFileStream ("cda.tr"));
-  p2p.EnablePcapAll ("cda", false);
+  p2p1.EnablePcap ("l1-cda",n0n1 , false);
+  p2p2.EnablePcap ("l1-cda",n1n2 , false);
+  p2p3.EnablePcap ("l1-cda",n2n3 , false);
+  // p2p1.EnablePcapAll ("cda-1", false);
+  // p2p2.EnablePcapAll ("cda-2", false);
+  // p2p3.EnablePcapAll ("cda-3", false);
 
 //
 // Now, do the actual simulation.
