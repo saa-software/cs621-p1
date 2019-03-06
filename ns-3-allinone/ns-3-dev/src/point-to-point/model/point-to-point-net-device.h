@@ -244,6 +244,8 @@ private:
    */
   void AddHeader (Ptr<Packet> p, uint16_t protocolNumber);
 
+  void CompressionAddHeader (Ptr<Packet> p, uint16_t protocolNumber);
+
   /**
    * Removes, from a packet of data, all headers and trailers that
    * relate to the protocol implemented by the agent
@@ -253,6 +255,8 @@ private:
    * protocol stack.
    */
   bool ProcessHeader (Ptr<Packet> p, uint16_t& param);
+
+  bool CompressionProcessHeader (Ptr<Packet> p, uint16_t &param);
 
   /**
    * Start Sending a Packet Down the Wire.
@@ -477,6 +481,9 @@ private:
    */
   static uint16_t EtherToPpp (uint16_t protocol);
 
+  static uint16_t CompressionPppToEther (uint16_t proto);
+
+  static uint16_t CompressionEtherToPpp (uint16_t proto);
 };
 
 } // namespace ns3
