@@ -20,7 +20,6 @@ main (int argc, char *argv[])
 	  	m_data = new int [1100];
 	  	file.read((char*)m_data, 1100);
 	  	ofile.write((char*)&m_data, 1100);
-	  	ofile.write(newLine, sizeof(newLine));
 	  	delete [] m_data;
 	  }
 	}

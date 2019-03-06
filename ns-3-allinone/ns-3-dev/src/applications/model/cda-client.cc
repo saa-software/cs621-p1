@@ -246,9 +246,10 @@ CdaClient::Send (void)
       m_data = new uint8_t [m_size];
       m_dataSize = m_size;
       ifstream file;
-      file.open ("/dev/urandom", ios::in | ios::binary);
+      file.open ("data.txt", ios::in | ios::binary);
       if (file.is_open ())
         {
+          file.seekg(m_sent*1100);
           char c;
           uint32_t j = 0;
           while(j < m_size)
