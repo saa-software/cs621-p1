@@ -242,7 +242,7 @@ private:
    * \param p packet
    * \param protocolNumber protocol number
    */
-  void AddHeader (Ptr<Packet> p, uint16_t protocolNumber, bool compressionEnabled);
+  void AddHeader (Ptr<Packet> p, uint16_t protocolNumber);
 
   void CompressionAddHeader (Ptr<Packet> p, uint16_t protocolNumber);
 
@@ -479,7 +479,7 @@ private:
    * \param protocol An Ethernet protocol number
    * \return The corresponding PPP protocol number
    */
-  static uint16_t EtherToPpp (uint16_t protocol, bool compressionEnabled);
+  static uint16_t EtherToPpp (uint16_t protocol);
 
   static uint16_t CompressionPppToEther (uint16_t proto);
 

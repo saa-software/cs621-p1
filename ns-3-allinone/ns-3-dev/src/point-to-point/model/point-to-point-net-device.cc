@@ -193,11 +193,11 @@ PointToPointNetDevice::SetCompressionEnabled (bool compressionEnabled)
 }
 
 void
-PointToPointNetDevice::AddHeader (Ptr<Packet> p, uint16_t protocolNumber, bool compressionEnabled)
+PointToPointNetDevice::AddHeader (Ptr<Packet> p, uint16_t protocolNumber)
 {
   NS_LOG_FUNCTION (this << p << protocolNumber);
   PppHeader ppp;
-  ppp.SetProtocol (EtherToPpp (protocolNumber, compressionEnabled));
+  ppp.SetProtocol (EtherToPpp (protocolNumber));
   p->AddHeader (ppp);
 }
 
@@ -352,86 +352,6 @@ PointToPointNetDevice::SetReceiveErrorModel (Ptr<ErrorModel> em)
   m_receiveErrorModel = em;
 }
 
-void
-PointToPointNetDevice::Receive (Ptr<Packet> packet)
-{
-  // printf("enaled %d\n", m_compressionEnabled);
-   printf ("Packet size pre:          %d\n", packet->GetSize ());
-  PppHeader ppp;
-  packet->RemoveHeader (ppp);
-  printf ("Recv protocol: %d\n", ppp.GetProtocol ());
-   printf ("Packet size post:         %d\n", packet->GetSize ());
-  // Ptr<Packet> packet;
-  if (m_compressionEnabled == 1 && ppp.GetProtocol () == 16417)
-    {
-      printf ("########################## DECOMPRESS ##########################\n");
-      printf ("Incoming Packet Size: %d\n", packet->GetSize ());
-      packet = DecompressPacket (packet);
-      printf ("Packet size:          %d\n", packet->GetSize ());
-    }
-  else
-    {
-      packet = packet->Copy ();
-    }
-
-  NS_LOG_FUNCTION (this << packet);
-  uint16_t protocol = 0;
-
-  // CompressPacket (packet);
-  // uint32_t size = 1024;
-  // Ptr<Packet> p = Create<Packet> (size);
-  // printf ("test packet: %d\n", p->GetSize ());
-  // CompressPacket (p);
-
-  if (m_receiveErrorModel && m_receiveErrorModel->IsCorrupt (packet))
-    {
-      //
-      // If we have an error model and it indicates that it is time to lose a
-      // corrupted packet, don't forward this packet up, let it go.
-      //
-      m_phyRxDropTrace (packet);
-    }
-  else
-    {
-      //
-      // Hit the trace hooks.  All of these hooks are in the same place in this
-      // device because it is so simple, but this is not usually the case in
-      // more complicated devices.
-      //
-      m_snifferTrace (packet);
-      m_promiscSnifferTrace (packet);
-      m_phyRxEndTrace (packet);
-
-      //
-      // Trace sinks will expect complete packets, not packets without some of the
-      // headers.
-      //
-      Ptr<Packet> originalPacket = packet->Copy ();
-
-      //
-      // Strip off the point-to-point protocol header and forward this packet
-      // up the protocol stack.  Since this is a simple point-to-point link,
-      // there is no difference in what the promisc callback sees and what the
-      // normal receive callback sees.
-      //
-      // if (m_compressionEnabled == 1) {
-        // CompressionProcessHeader (packet, protocol);
-      // } else {
-        ProcessHeader (packet, protocol);
-      // }
-
-      if (!m_promiscCallback.IsNull ())
-        {
-          m_macPromiscRxTrace (originalPacket);
-          m_promiscCallback (this, packet, protocol, GetRemote (), GetAddress (),
-                             NetDevice::PACKET_HOST);
-        }
-
-      m_macRxTrace (originalPacket);
-      m_rxCallback (this, packet, protocol, GetRemote ());
-    }
-}
-
 Ptr<Queue<Packet>>
 PointToPointNetDevice::GetQueue (void) const
 {
@@ -557,6 +477,88 @@ PointToPointNetDevice::IsBridge (void) const
   return false;
 }
 
+void
+PointToPointNetDevice::Receive (Ptr<Packet> packet)
+{
+  printf ("COMPRESSION ENABLED RECR  %d\n", m_compressionEnabled);
+  printf ("Packet size pre:          %d\n", packet->GetSize ());
+  PppHeader ppp;
+  packet->PeekHeader (ppp);
+  printf ("Recv protocol:            %d\n", ppp.GetProtocol ());
+  printf ("Packet size post:         %d\n", packet->GetSize ());
+  // Ptr<Packet> packet;
+
+  NS_LOG_FUNCTION (this << packet);
+  uint16_t protocol = 0;
+  if (m_compressionEnabled == 1) {
+    if (ppp.GetProtocol () == 0x4021) {
+      packet->RemoveHeader (ppp);
+      printf ("########################## DECOMPRESS ##########################\n");
+      printf ("Incoming Packet Size: %d\n", packet->GetSize ());
+      packet = DecompressPacket (packet);
+      printf ("Packet size:          %d\n", packet->GetSize ());
+    }
+  } else {
+     ProcessHeader (packet, protocol);
+  }
+
+
+
+  // CompressPacket (packet);
+  // uint32_t size = 1024;
+  // Ptr<Packet> p = Create<Packet> (size);
+  // printf ("test packet: %d\n", p->GetSize ());
+  // CompressPacket (p);
+
+  if (m_receiveErrorModel && m_receiveErrorModel->IsCorrupt (packet))
+    {
+      //
+      // If we have an error model and it indicates that it is time to lose a
+      // corrupted packet, don't forward this packet up, let it go.
+      //
+      m_phyRxDropTrace (packet);
+    }
+  else
+    {
+      //
+      // Hit the trace hooks.  All of these hooks are in the same place in this
+      // device because it is so simple, but this is not usually the case in
+      // more complicated devices.
+      //
+      m_snifferTrace (packet);
+      m_promiscSnifferTrace (packet);
+      m_phyRxEndTrace (packet);
+
+      //
+      // Trace sinks will expect complete packets, not packets without some of the
+      // headers.
+      //
+      Ptr<Packet> originalPacket = packet->Copy ();
+
+      //
+      // Strip off the point-to-point protocol header and forward this packet
+      // up the protocol stack.  Since this is a simple point-to-point link,
+      // there is no difference in what the promisc callback sees and what the
+      // normal receive callback sees.
+      //
+      // if (m_compressionEnabled == 1) {
+        // CompressionProcessHeader (packet, protocol);
+      // } else {
+       
+      // }
+
+      if (!m_promiscCallback.IsNull ())
+        {
+          m_macPromiscRxTrace (originalPacket);
+          m_promiscCallback (this, packet, protocol, GetRemote (), GetAddress (),
+                             NetDevice::PACKET_HOST);
+        }
+
+      m_macRxTrace (originalPacket);
+      m_rxCallback (this, packet, protocol, GetRemote ());
+    }
+}
+
 bool
 PointToPointNetDevice::Send (Ptr<Packet> packet, const Address &dest, uint16_t protocolNumber)
 {
@@ -564,20 +566,46 @@ PointToPointNetDevice::Send (Ptr<Packet> packet, const Address &dest, uint16_t p
   NS_LOG_LOGIC ("p=" << packet << ", dest=" << &dest);
   NS_LOG_LOGIC ("UID is " << packet->GetUid ());
 
+  printf ("COMPRESSION ENABLED SEND  %d\n", m_compressionEnabled);
   printf ("Packet size pre:          %d\n", packet->GetSize ());
   PppHeader ppp;
-  packet->RemoveHeader (ppp);
-  printf ("Send protocol: %d\n", ppp.GetProtocol ());
+  packet->PeekHeader (ppp);
+  printf ("Send protocol:            %d\n", ppp.GetProtocol ());
   printf ("Packet size post:         %d\n", packet->GetSize ());
-  // // Ptr<Packet> packet;
-  if (m_compressionEnabled == 1 && ppp.GetProtocol () == 17664) {
-    printf ("##########################  COMPRESS  ##########################\n");
-    printf ("Incoming packet size: %d\n", packet->GetSize ());
-    packet = CompressPacket (packet);
-    printf ("Packet size:          %d\n", packet->GetSize ());
-  } else {
-    packet = packet->Copy ();
+  
+  if (m_compressionEnabled == 0 && ppp.GetProtocol () == 0x4500) {
+    PppHeader ppp2;
+    ppp2.SetProtocol (0x0021);
+    packet->AddHeader (ppp2);
+  } else if (m_compressionEnabled == 1) {
+      printf ("##########################  COMPRESS  ##########################\n");
+      printf ("Incoming packet size: %d\n", packet->GetSize ());
+      packet = CompressPacket (packet);
   }
+
+  printf ("Packet size:              %d\n", packet->GetSize ());
+  
+  
+  
+  
+  
+  
+  // if (ppp.GetProtocol () == 17664) {
+  //   PppHeader ppp2;
+  //   ppp2.SetProtocol (0x0021);
+  //   packet->AddHeader (ppp2);
+  // } else if (ppp.GetProtocol () == 33) {
+  //   if (m_compressionEnabled == 1) {
+  //     printf ("##########################  COMPRESS  ##########################\n");
+  //     printf ("Incoming packet size: %d\n", packet->GetSize ());
+  //     packet = CompressPacket (packet);
+  //   } else {
+  //     packet = packet->Copy ();
+  //   }
+  // } else {
+  //   packet = packet->Copy ();
+  // }
+  
 
   //
   // If IsLinkUp() is false it means there is no channel to send any packet
@@ -596,7 +624,7 @@ PointToPointNetDevice::Send (Ptr<Packet> packet, const Address &dest, uint16_t p
   // if (m_compressionEnabled == 1) {
     // CompressionAddHeader (packet, protocolNumber);
   // } else {
-    AddHeader (packet, protocolNumber, m_compressionEnabled);
+   // AddHeader (packet, protocolNumber);
   // }
 
   // PppHeader ppp2;
@@ -773,6 +801,7 @@ PointToPointNetDevice::DecompressPacket (Ptr<Packet> packet)
   Ptr<Packet> decompPacket = Create<Packet> (temp_buffer, sizeof (temp_buffer));
   decompPacket->PeekHeader (ppp2);
   ppp2.SetProtocol (0x0021);
+  decompPacket->AddHeader (ppp2);
   // printf ("size of decompressed packet: %d\n", decompPacket->GetSize ());
 
   return decompPacket;
@@ -833,8 +862,6 @@ PointToPointNetDevice::PppToEther (uint16_t proto)
     {
     case 0x0021:
       return 0x0800; //IPv4
-    case 0x4021:
-      return 0x0800;
     case 0x0057:
       return 0x86DD; //IPv6
     default:
@@ -844,17 +871,13 @@ PointToPointNetDevice::PppToEther (uint16_t proto)
 }
 
 uint16_t
-PointToPointNetDevice::EtherToPpp (uint16_t proto, bool compressionEnabled)
+PointToPointNetDevice::EtherToPpp (uint16_t proto)
 {
   NS_LOG_FUNCTION_NOARGS ();
   switch (proto)
     {
     case 0x0800:
-      if (compressionEnabled == 0) {
-        return 0x0021; //IPv4
-      } else {
-        return 0x4021;
-      }
+      return 0x0021; //IPv4
     case 0x86DD:
       return 0x0057; //IPv6
     default:

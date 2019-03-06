@@ -64,7 +64,7 @@ main (int argc, char *argv[])
 
   PointToPointHelper p2p1;
   p2p1.SetDeviceAttribute ("DataRate", StringValue ("8Mbps"));
-  p2p1.SetDeviceAttribute ("CompressionEnabled", BooleanValue(!compressionEnabled));
+  p2p1.SetDeviceAttribute ("CompressionEnabled", BooleanValue(0));
   
   PointToPointHelper p2p2;
   p2p2.SetDeviceAttribute ("DataRate", StringValue ("8Mbps"));
@@ -72,7 +72,7 @@ main (int argc, char *argv[])
 
   PointToPointHelper p2p3;
   p2p3.SetDeviceAttribute ("DataRate", StringValue ("8Mbps"));
-  p2p3.SetDeviceAttribute ("CompressionEnabled", BooleanValue(!compressionEnabled));
+  p2p3.SetDeviceAttribute ("CompressionEnabled", BooleanValue(0));
 
   NetDeviceContainer c0c1 = p2p1.Install (n0n1);
   NetDeviceContainer c1c2 = p2p2.Install (n1n2);
@@ -94,6 +94,7 @@ main (int argc, char *argv[])
 // Create a CdaServer application on node one.
 //
 
+  Packet::EnablePrinting();
   double start = 1.0;
   double stop = 3000.0;
   uint16_t port = 9;  // well-known echo port number
@@ -107,7 +108,7 @@ main (int argc, char *argv[])
 // node three.
 //
   uint32_t packetSize = 1024;
-  uint32_t maxPacketCount = 10;
+  uint32_t maxPacketCount = 1;
   Time interPacketInterval = MilliSeconds (1);
   CdaClientHelper client (i2i3.GetAddress(1), port);
   client.SetAttribute ("MaxPackets", UintegerValue (maxPacketCount));
@@ -123,9 +124,9 @@ main (int argc, char *argv[])
   p2p1.EnablePcap ("l1-cda",n0n1 , false);
   p2p2.EnablePcap ("l1-cda",n1n2 , false);
   p2p3.EnablePcap ("l1-cda",n2n3 , false);
-  // p2p1.EnablePcapAll ("cda-1", false);
-  // p2p2.EnablePcapAll ("cda-2", false);
-  // p2p3.EnablePcapAll ("cda-3", false);
+    // p2p1.EnablePcapAll ("cda-1", false);
+    // p2p2.EnablePcapAll ("cda-2", false);
+    // p2p3.EnablePcapAll ("cda-3", false);
 
 //
 // Now, do the actual simulation.
