@@ -87,7 +87,7 @@ main (int argc, char *argv[])
   Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
 
 //
-// Create a CdaServer application on node one.
+// Create a CdaServer application on node three.
 //
 
   double start = 1.0;
