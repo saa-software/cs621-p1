@@ -29,7 +29,7 @@ using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE ("Cda");
 
-int 
+int
 main (int argc, char *argv[])
 {
 //
@@ -65,7 +65,7 @@ main (int argc, char *argv[])
   PointToPointHelper p2p1;
   p2p1.SetDeviceAttribute ("DataRate", StringValue ("8Mbps"));
   p2p1.SetDeviceAttribute ("CompressionEnabled", BooleanValue(0));
-  
+
   PointToPointHelper p2p2;
   p2p2.SetDeviceAttribute ("DataRate", StringValue ("8Mbps"));
   p2p2.SetDeviceAttribute ("CompressionEnabled", BooleanValue(compressionEnabled));
@@ -132,7 +132,7 @@ main (int argc, char *argv[])
 // Now, do the actual simulation.
 //
   Simulator::Run ();
-  Simulator:: 
+  Simulator::
   Simulator::Destroy ();
   NS_LOG_INFO ("Done.");
 }
