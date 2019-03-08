@@ -636,7 +636,7 @@ PointToPointNetDevice::Send (Ptr<Packet> packet, const Address &dest, uint16_t p
       // u_int32_t srcSize = packet->GetSize ();
       compress (dest, &destSize, src, packet->GetSize ());
       Ptr<Packet> compPacket = Create<Packet> (dest, destSize);
-      packet->RemoveAtEnd (1024);
+      packet->RemoveAtEnd (1100);
       packet->AddAtEnd (compPacket);
       PppHeader ppp2;
       packet->PeekHeader (ppp);
