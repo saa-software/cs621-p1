@@ -188,8 +188,10 @@ public:
   virtual Address GetMulticast (Ipv6Address addr) const;
 
   virtual void SetPromiscReceiveCallback (PromiscReceiveCallback cb);
-  virtual void CompressPacket ();
-  virtual void DecompressPacket (Packet p);
+
+  // virtual u_int8_t* CompressPacket (Ptr<Packet> packet);
+  // virtual u_int8_t* DecompressPacket (Ptr<Packet> packet);
+
   virtual bool SupportsSendFrom (void) const;
 
   virtual void SetCompressionEnabled (bool compressionEnabled);
@@ -244,6 +246,8 @@ private:
    */
   void AddHeader (Ptr<Packet> p, uint16_t protocolNumber);
 
+  void CompressionAddHeader (Ptr<Packet> p, uint16_t protocolNumber);
+
   /**
    * Removes, from a packet of data, all headers and trailers that
    * relate to the protocol implemented by the agent
@@ -253,6 +257,8 @@ private:
    * protocol stack.
    */
   bool ProcessHeader (Ptr<Packet> p, uint16_t& param);
+
+  bool CompressionProcessHeader (Ptr<Packet> p, uint16_t &param);
 
   /**
    * Start Sending a Packet Down the Wire.
@@ -477,6 +483,9 @@ private:
    */
   static uint16_t EtherToPpp (uint16_t protocol);
 
+  static uint16_t CompressionPppToEther (uint16_t proto);
+
+  static uint16_t CompressionEtherToPpp (uint16_t proto);
 };
 
 } // namespace ns3
