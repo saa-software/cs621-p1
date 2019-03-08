@@ -66,7 +66,7 @@ CdaServer::CdaServer ()
   m_t1End = 0.0;
   m_t2Start = 0.0;
   m_t2End = 0.0;
-  m_lastSentPacket = 0.0;
+  m_lastSentPacket = Simulator::Now ().GetSeconds ();
   m_nPackets = 0;
 }
 
@@ -159,23 +159,27 @@ CdaServer::StopApplication ()
     m_t2End = m_lastSentPacket;
     double t1Time = fabs (m_t1Start - m_t1End);
     double t2Time = fabs (m_t2Start - m_t2End);
-    double delta = fabs (t1Time - t2Time) * 1000;
+    double delta = fabs (t1Time - t2Time);
+
+    std::cout << "t1start = " << m_t1Start << std::endl;
+    std::cout << "t1End = " << m_t1End << std::endl;
+    std::cout << "t2Start = " << m_t2End << std::endl;
+    std::cout << "t2End = " << m_t2End << std::endl;
 
     std::cout << "High Entropy Train Time = " << t1Time << std::endl;
     std::cout << "Low Entropy Train Time = " << t2Time << std::endl;
     
     if (delta > 100)
     {
-      std::cout << "Compression detected!" << std::endl;
+      std::cout << "Compression detected!\ndelta = " << delta << "ms" << std::endl;
     } else {
-      std::cout << "No compression was detected" << std::endl;
+      std::cout << "No compression was detected\ndelta = " << delta << "ms" << std::endl;
     }
 }
 
 void 
 CdaServer::HandleRead (Ptr<Socket> socket)
 {
-  // NS_LOG_FUNCTION (this << socket);
 
   Ptr<Packet> packet;
   Address from;
@@ -186,21 +190,19 @@ CdaServer::HandleRead (Ptr<Socket> socket)
       m_rxTrace (packet);
       m_rxTraceWithAddresses (packet, from, localAddress);
 
-      double recTime = Simulator::Now ().GetSeconds ();
+      double recTime = Simulator::Now ().GetMilliSeconds ();
       if (m_lastSentPacket == 0.0)
         {
           m_t1Start = recTime;
+          m_lastSentPacket = recTime;
         }
-      if (fabs (m_lastSentPacket - recTime ) > 7.0)
+      if (fabs (m_lastSentPacket - recTime ) > 7000.0)
       {
         m_t1End = m_lastSentPacket;
         m_t2Start = recTime;
       }
       m_lastSentPacket = recTime;
       m_nPackets++;
-      packet->RemoveAllPacketTags ();
-      packet->RemoveAllByteTags ();
-
     }
 }
 

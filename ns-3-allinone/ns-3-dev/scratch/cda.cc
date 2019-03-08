@@ -26,6 +26,8 @@
 #include "ns3/point-to-point-module.h"
 #include "ns3/flow-monitor-helper.h"
 #include "ns3/ipv4-global-routing-helper.h"
+#include "ns3/queue.h"
+#include "ns3/drop-tail-queue.h"
 
 using namespace ns3;
 
@@ -34,6 +36,8 @@ NS_LOG_COMPONENT_DEFINE ("Cda");
 int 
 main (int argc, char *argv[])
 {
+Config::SetDefault ("ns3::QueueBase::MaxSize", StringValue ("6000p"));
+
 //
 // Users may find it convenient to turn on explicit debugging
 // for selected modules; the below lines suggest how to do this
@@ -69,7 +73,7 @@ main (int argc, char *argv[])
   p2p1.SetDeviceAttribute ("CompressionEnabled", BooleanValue(0));
   
   PointToPointHelper p2p2;
-  p2p2.SetDeviceAttribute ("DataRate", StringValue ("8Mbps"));
+  p2p2.SetDeviceAttribute ("DataRate", StringValue (std::to_string(capacity) + "Mbps"));
   p2p2.SetDeviceAttribute ("CompressionEnabled", BooleanValue(compressionEnabled));
 
   PointToPointHelper p2p3;
@@ -114,7 +118,7 @@ main (int argc, char *argv[])
   uint32_t packetSize = 1100;
   uint32_t maxPacketCount = 12000;
 
-  Time interPacketInterval = MilliSeconds (1);
+  Time interPacketInterval = MicroSeconds (500);
   CdaClientHelper client (i2i3.GetAddress(1), port);
   client.SetAttribute ("MaxPackets", UintegerValue (maxPacketCount));
   client.SetAttribute ("Interval", TimeValue (interPacketInterval));
