@@ -17,6 +17,8 @@
 // - Tracing of queues and packet receptions to file "cda.tr"
 
 #include <fstream>
+#include <string>
+#include <iostream> 
 #include "ns3/core-module.h"
 #include "ns3/applications-module.h"
 #include "ns3/internet-module.h"
@@ -49,8 +51,8 @@ main (int argc, char *argv[])
   cmd.AddValue("compressionEnabled", "Enable or disable compression link", compressionEnabled);
   cmd.Parse (argc, argv);
 
-  NS_LOG_INFO ("Capacity of Compression link: " << capacity);
-  NS_LOG_INFO ("Compression Enabled: " << compressionEnabled);
+  std::cout << "Capacity of Compression link: " << capacity << std::endl;
+  std::cout << "Compression Enabled: " << compressionEnabled << std::endl;
 
 // Explicitly create the nodes required by the topology (shown above).
 
@@ -84,6 +86,7 @@ main (int argc, char *argv[])
   Ipv4AddressHelper address;
   address.SetBase ("10.1.1.0", "255.255.255.0");
 
+
   Ipv4InterfaceContainer i0i1 = address.Assign (c0c1);
   Ipv4InterfaceContainer i1i2 = address.Assign (c1c2);
   Ipv4InterfaceContainer i2i3 = address.Assign (c2c3);
@@ -98,6 +101,7 @@ main (int argc, char *argv[])
   double start = 1.0;
   double stop = 3000.0;
   uint16_t port = 9;  // well-known echo port number
+
   CdaServerHelper server (port);
   ApplicationContainer apps = server.Install (n.Get (3));
   apps.Start (Seconds (start));
@@ -107,8 +111,9 @@ main (int argc, char *argv[])
 // Create a CdaClient application to send UDP datagrams from node zero to
 // node three.
 //
-  uint32_t packetSize = 1024;
-  uint32_t maxPacketCount = 1;
+  uint32_t packetSize = 1100;
+  uint32_t maxPacketCount = 12000;
+
   Time interPacketInterval = MilliSeconds (1);
   CdaClientHelper client (i2i3.GetAddress(1), port);
   client.SetAttribute ("MaxPackets", UintegerValue (maxPacketCount));
@@ -121,13 +126,20 @@ main (int argc, char *argv[])
 
   AsciiTraceHelper ascii;
   // p2p.EnableAsciiAll (ascii.CreateFileStream ("cda.tr"));
+
   p2p1.EnablePcap ("l1-cda",n0n1 , false);
   p2p2.EnablePcap ("l1-cda",n1n2 , false);
   p2p3.EnablePcap ("l1-cda",n2n3 , false);
-    // p2p1.EnablePcapAll ("cda-1", false);
-    // p2p2.EnablePcapAll ("cda-2", false);
-    // p2p3.EnablePcapAll ("cda-3", false);
 
+  if (compressionEnabled)
+  {
+    std::string fileName = "cda-" + std::to_string(capacity) + "-compression-";
+    p2p.EnablePcapAll (fileName, false);
+  } else {
+    std::string fileName = "cda-" + std::to_string(capacity) + "-noCompression-";
+    p2p.EnablePcapAll (fileName, false);
+  }
+  
 //
 // Now, do the actual simulation.
 //

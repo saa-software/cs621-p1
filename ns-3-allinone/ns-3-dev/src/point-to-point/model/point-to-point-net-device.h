@@ -188,8 +188,10 @@ public:
   virtual Address GetMulticast (Ipv6Address addr) const;
 
   virtual void SetPromiscReceiveCallback (PromiscReceiveCallback cb);
+
   // virtual u_int8_t* CompressPacket (Ptr<Packet> packet);
   // virtual u_int8_t* DecompressPacket (Ptr<Packet> packet);
+
   virtual bool SupportsSendFrom (void) const;
 
   virtual void SetCompressionEnabled (bool compressionEnabled);
