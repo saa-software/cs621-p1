@@ -483,10 +483,10 @@ PointToPointNetDevice::Receive (Ptr<Packet> packet)
   NS_LOG_FUNCTION (this << packet);
   uint16_t protocol = 0;
 
-  printf ("recv packet size %d\n", packet->GetSize ());
+  // printf ("recv packet size %d\n", packet->GetSize ());
   PppHeader ppp_o;
   packet->PeekHeader (ppp_o);
-  printf("recv protocol: %d\n", ppp_o.GetProtocol ());
+  // printf("recv protocol: %d\n", ppp_o.GetProtocol ());
   if (m_receiveErrorModel && m_receiveErrorModel->IsCorrupt (packet))
     {
       //
@@ -506,26 +506,24 @@ PointToPointNetDevice::Receive (Ptr<Packet> packet)
       m_promiscSnifferTrace (packet);
       m_phyRxEndTrace (packet);
 
-
-
       if (m_compressionEnabled == 1)
         {
-            printf ("########################## DECOMPRESS ##########################\n");
-            PppHeader ppp;
-            packet->RemoveHeader (ppp);
+          // printf ("########################## DECOMPRESS ##########################\n");
+          PppHeader ppp;
+          packet->RemoveHeader (ppp);
 
-            uLongf BUFFERSIZE = 10000;
-            uint8_t dest[BUFFERSIZE];
-            u_int8_t *src = (u_int8_t *) &packet;
-            // uint8_t *src[packet->GetSize ()];
-            // packet->Serialize(*src, packet->GetSize ());
-            uLongf srcSize = packet->GetSize ();
-            uncompress (dest, &BUFFERSIZE, src, srcSize);
-            // std::cout << "value: " << (int)*dest << std::endl;
-            // packet->Serialize (dest, BUFFERSIZE);
-            // packet = Create<Packet> (dest, BUFFERSIZE);
-      //     // printf ("COMPRESSION ENABLED RECR  %d\n", m_compressionEnabled);
-      //     // printf ("Packet size pre:          %d\n", packet->GetSize ());
+          uLongf BUFFERSIZE = 10000;
+          uint8_t dest[BUFFERSIZE];
+          u_int8_t *src = (u_int8_t *) &packet;
+          // uint8_t *src[packet->GetSize ()];
+          // packet->Serialize(*src, packet->GetSize ());
+          uLongf srcSize = packet->GetSize ();
+          uncompress (dest, &BUFFERSIZE, src, srcSize);
+          // std::cout << "value: " << (int)*dest << std::endl;
+          // packet->Serialize (dest, BUFFERSIZE);
+          // packet = Create<Packet> (dest, BUFFERSIZE);
+          //     // printf ("COMPRESSION ENABLED RECR  %d\n", m_compressionEnabled);
+          //     // printf ("Packet size pre:          %d\n", packet->GetSize ());
           // PppHeader ppp;
           // packet->RemoveHeader (ppp);
           // printf("protocol recv: %d\n", ppp.GetProtocol ());
@@ -534,38 +532,37 @@ PointToPointNetDevice::Receive (Ptr<Packet> packet)
           // PppHeader ppp2;
           // packet->PeekHeader (ppp2);
           // printf("protocol recv2: %d\n", ppp2.GetProtocol ());
-      //     // printf ("Recv protocol:            %d\n", ppp.GetProtocol ());
-      //     // printf ("Packet size post:         %d\n", packet->GetSize ());
-      //     if (ppp.GetProtocol () == 0x4021)
-      //       {
-      //         packet->RemoveHeader (ppp);
+          //     // printf ("Recv protocol:            %d\n", ppp.GetProtocol ());
+          //     // printf ("Packet size post:         %d\n", packet->GetSize ());
+          //     if (ppp.GetProtocol () == 0x4021)
+          //       {
+          //         packet->RemoveHeader (ppp);
 
-      //         packet->RemoveHeader (ppp);
-      //         
+          //         packet->RemoveHeader (ppp);
+          //
 
+          //         uLongf destSize = BUFFERSIZE;
 
-      //         uLongf destSize = BUFFERSIZE;
+          //         // dst, dstsize, src, srcsize
+          //
+          //         printf ("dest size: %lu\n", destSize);
 
-      //         // dst, dstsize, src, srcsize
-      //         
-      //         printf ("dest size: %lu\n", destSize);
-
-      //         // printf ("Incoming Packet Size: %d\n", packet->GetSize ());
-      //         // u_int8_t* data = DecompressPacket (packet);
-      //         // packet = Create<Packet> (dest, destSize);
-      //         packet->Serialize (dest, destSize);
-      //         printf ("packet size %d\n", packet->GetSize ());
-      //         PppHeader ppptest;
-      //         packet->PeekHeader (ppptest);
-      //         printf ("protocol: %d\n", ppptest.GetProtocol ());
-      //         // printf ("Packet size:          %d\n", packet->GetSize ());
-      //         // PppHeader ppp2;
-      //         // packet->PeekHeader (ppp2);
-      //         // printf ("Post DECOMPRESS proto: %d\n", ppp2.GetProtocol ());
-      //         // packet->RemoveHeader (ppp2);
-      //         // ppp.SetProtocol (0x0021);
-      //         // packet->AddHeader (ppp);
-      //       }
+          //         // printf ("Incoming Packet Size: %d\n", packet->GetSize ());
+          //         // u_int8_t* data = DecompressPacket (packet);
+          //         // packet = Create<Packet> (dest, destSize);
+          //         packet->Serialize (dest, destSize);
+          //         printf ("packet size %d\n", packet->GetSize ());
+          //         PppHeader ppptest;
+          //         packet->PeekHeader (ppptest);
+          //         printf ("protocol: %d\n", ppptest.GetProtocol ());
+          //         // printf ("Packet size:          %d\n", packet->GetSize ());
+          //         // PppHeader ppp2;
+          //         // packet->PeekHeader (ppp2);
+          //         // printf ("Post DECOMPRESS proto: %d\n", ppp2.GetProtocol ());
+          //         // packet->RemoveHeader (ppp2);
+          //         // ppp.SetProtocol (0x0021);
+          //         // packet->AddHeader (ppp);
+          //       }
         }
       // else
       //   {
@@ -579,14 +576,14 @@ PointToPointNetDevice::Receive (Ptr<Packet> packet)
       // originalPacket->PeekHeader (pppOrig);
       // printf("ppporig protocol %d\n", pppOrig.GetProtocol ());
 
-          //
-          // Strip off the point-to-point protocol header and forward this packet
-          // up the protocol stack.  Since this is a simple point-to-point link,
-          // there is no difference in what the promisc callback sees and what the
-          // normal receive callback sees.
-          //
-          ProcessHeader (packet, protocol);
-        // }
+      //
+      // Strip off the point-to-point protocol header and forward this packet
+      // up the protocol stack.  Since this is a simple point-to-point link,
+      // there is no difference in what the promisc callback sees and what the
+      // normal receive callback sees.
+      //
+      ProcessHeader (packet, protocol);
+      // }
 
       if (!m_promiscCallback.IsNull ())
         {
@@ -607,10 +604,10 @@ PointToPointNetDevice::Send (Ptr<Packet> packet, const Address &dest, uint16_t p
   NS_LOG_LOGIC ("p=" << packet << ", dest=" << &dest);
   NS_LOG_LOGIC ("UID is " << packet->GetUid ());
 
-  printf ("send packet size %d\n", packet->GetSize ());
+  // printf ("send packet size %d\n", packet->GetSize ());
   PppHeader ppp_o;
   packet->PeekHeader (ppp_o);
-  printf("send protocol: %d\n", ppp_o.GetProtocol ());
+  // printf("send protocol: %d\n", ppp_o.GetProtocol ());
   // printf("packet %s\n",packet->ToString ());
   // std::cout << "Follow this command: " << packet->ToString ();
   // printf("\n");
@@ -626,7 +623,7 @@ PointToPointNetDevice::Send (Ptr<Packet> packet, const Address &dest, uint16_t p
 
   if (m_compressionEnabled == 1)
     {
-      printf ("##########################  COMPRESS  ##########################\n");
+      // printf ("##########################  COMPRESS  ##########################\n");
       PppHeader ppp;
       ppp.SetProtocol (0x4021);
       packet->AddHeader (ppp);
@@ -643,56 +640,56 @@ PointToPointNetDevice::Send (Ptr<Packet> packet, const Address &dest, uint16_t p
       packet->AddAtEnd (compPacket);
       PppHeader ppp2;
       packet->PeekHeader (ppp);
-      printf("proto %d\n", ppp2.GetProtocol ());
+      // printf("proto %d\n", ppp2.GetProtocol ());
 
-  //     // if (ppp.GetProtocol () == 0x4500)
-  //     //   {
-  //     //     PppHeader ppp2;
-  //     //     ppp2.SetProtocol (0x0021);
-  //     //   }
-  //     // else
-  //       // {
-          // uLongf BUFFERSIZE = 1024;
-          // uint8_t dest[BUFFERSIZE];
-          // uint8_t *buffer = (u_int8_t *) &packet;
-          // uint8_t *buffer = new uint8_t[packet->GetSize ()]; 
-          // printf ("buffer size: %lu\n", sizeof(buffer));
-          // printf ("buffer size: %lu\n", sizeof(buffer)/sizeof(uint8_t));
-          // packet->CopyData (buffer, packet->GetSize ());
-          // printf ("buffer size: %lu\n", sizeof(buffer));
-          // printf ("buffer size: %lu\n", sizeof(buffer)/sizeof(uint8_t));
-  //         // u_int8_t src[BUFFERSIZE];
-  //         // u_int32_t srcSize = packet->GetSize ();
-  //         // packet->Serialize (src, srcSize);
-          // uLongf destSize = BUFFERSIZE;
+      //     // if (ppp.GetProtocol () == 0x4500)
+      //     //   {
+      //     //     PppHeader ppp2;
+      //     //     ppp2.SetProtocol (0x0021);
+      //     //   }
+      //     // else
+      //       // {
+      // uLongf BUFFERSIZE = 1024;
+      // uint8_t dest[BUFFERSIZE];
+      // uint8_t *buffer = (u_int8_t *) &packet;
+      // uint8_t *buffer = new uint8_t[packet->GetSize ()];
+      // printf ("buffer size: %lu\n", sizeof(buffer));
+      // printf ("buffer size: %lu\n", sizeof(buffer)/sizeof(uint8_t));
+      // packet->CopyData (buffer, packet->GetSize ());
+      // printf ("buffer size: %lu\n", sizeof(buffer));
+      // printf ("buffer size: %lu\n", sizeof(buffer)/sizeof(uint8_t));
+      //         // u_int8_t src[BUFFERSIZE];
+      //         // u_int32_t srcSize = packet->GetSize ();
+      //         // packet->Serialize (src, srcSize);
+      // uLongf destSize = BUFFERSIZE;
 
-  //         // dst, dstsize, src, srcsize
-          // compress (dest, &destSize, buffer, packet->GetSize ());
-          // printf ("dest size: %lu\n", destSize);
+      //         // dst, dstsize, src, srcsize
+      // compress (dest, &destSize, buffer, packet->GetSize ());
+      // printf ("dest size: %lu\n", destSize);
 
-          // packet = Create<Packet> (dest, destSize);
-          // std::cout << "Follow this command: " << packet->ToString ();
-          // printf("\n");
-  //         printf ("packet size %d\n", packet->GetSize ());
-          // PppHeader ppp2;
-          // packet->PeekHeader (ppp2);
-          // ppp2.SetProtocol (0x4021);
-          // packet->AddHeader (ppp2);
-          // PppHeader ppptest;
-          // packet->PeekHeader (ppptest);
-          // printf("protocol send: %d\n", ppptest.GetProtocol ());
-          // std::cout << "Follow this command: " << packet->ToString ();
-          // printf("\n");
-  //       // }
+      // packet = Create<Packet> (dest, destSize);
+      // std::cout << "Follow this command: " << packet->ToString ();
+      // printf("\n");
+      //         printf ("packet size %d\n", packet->GetSize ());
+      // PppHeader ppp2;
+      // packet->PeekHeader (ppp2);
+      // ppp2.SetProtocol (0x4021);
+      // packet->AddHeader (ppp2);
+      // PppHeader ppptest;
+      // packet->PeekHeader (ppptest);
+      // printf("protocol send: %d\n", ppptest.GetProtocol ());
+      // std::cout << "Follow this command: " << packet->ToString ();
+      // printf("\n");
+      //       // }
     }
   // else
   //   {
-      //
-      // Stick a point to point protocol header on the packet in preparation for
-      // shoving it out the door.
-      //
-      AddHeader (packet, protocolNumber);
-    // }
+  //
+  // Stick a point to point protocol header on the packet in preparation for
+  // shoving it out the door.
+  //
+  AddHeader (packet, protocolNumber);
+  // }
 
   m_macTxTrace (packet);
 
@@ -852,60 +849,59 @@ PointToPointNetDevice::SetPromiscReceiveCallback (NetDevice::PromiscReceiveCallb
 
 //   return dest;
 // }
-=======
-void
-PointToPointNetDevice::CompressPacket ()
-{
 
-  // const char a[50] = "hello";
-  // const char b[50] = {};
+// void
+// PointToPointNetDevice::CompressPacket ()
+// {
 
-  // printf("a: %s", a);
-  // printf("b: %s", b);
+//   // const char a[50] = "hello";
+//   // const char b[50] = {};
 
-  // z_stream defstream;
-  // defstream.zalloc = Z_NULL;
-  // defstream.zfree = Z_NULL;
-  // defstream.opaque = Z_NULL;
-  // // setup "a" as the input and "b" as the compressed output
-  // defstream.avail_in = (uInt)strlen(a)+1; // size of input, string + terminator
-  // defstream.next_in = (Bytef *)a; // input char array
-  // defstream.avail_out = (uInt)sizeof(b); // size of output
-  // defstream.next_out = (Bytef *)b; // output char array
+//   // printf("a: %s", a);
+//   // printf("b: %s", b);
 
-  // // the actual compression work.
-  // deflateInit(&defstream, Z_BEST_COMPRESSION);
-  // deflate(&defstream, Z_FINISH);
-  // deflateEnd(&defstream);
+//   // z_stream defstream;
+//   // defstream.zalloc = Z_NULL;
+//   // defstream.zfree = Z_NULL;
+//   // defstream.opaque = Z_NULL;
+//   // // setup "a" as the input and "b" as the compressed output
+//   // defstream.avail_in = (uInt)strlen(a)+1; // size of input, string + terminator
+//   // defstream.next_in = (Bytef *)a; // input char array
+//   // defstream.avail_out = (uInt)sizeof(b); // size of output
+//   // defstream.next_out = (Bytef *)b; // output char array
 
-  // printf("a: %s", a);
-  // printf("b: %s", b);
-}
+//   // // the actual compression work.
+//   // deflateInit(&defstream, Z_BEST_COMPRESSION);
+//   // deflate(&defstream, Z_FINISH);
+//   // deflateEnd(&defstream);
 
-void
-PointToPointNetDevice::DecompressPacket (Packet p)
-{
-  
-  // const char b[50] = {};
-  // const char c[50] = {};
+//   // printf("a: %s", a);
+//   // printf("b: %s", b);
+// }
 
-  // z_stream infstream;
-  // infstream.zalloc = Z_NULL;
-  // infstream.zfree = Z_NULL;
-  // infstream.opaque = Z_NULL;
-  // // setup "b" as the input and "c" as the compressed output
-  // // infstream.avail_in = (uInt)((char*)defstream.next_out - b); // size of input
-  // infstream.avail_in = 50;
-  // infstream.next_in = (Bytef *)b; // input char array
-  // infstream.avail_out = (uInt)sizeof(c); // size of output
-  // infstream.next_out = (Bytef *)c; // output char array
+// void
+// PointToPointNetDevice::DecompressPacket (Packet p)
+// {
 
-  // // the actual DE-compression work.
-  // inflateInit(&infstream);
-  // inflate(&infstream, Z_NO_FLUSH);
-  // inflateEnd(&infstream);
-}
+//   // const char b[50] = {};
+//   // const char c[50] = {};
 
+//   // z_stream infstream;
+//   // infstream.zalloc = Z_NULL;
+//   // infstream.zfree = Z_NULL;
+//   // infstream.opaque = Z_NULL;
+//   // // setup "b" as the input and "c" as the compressed output
+//   // // infstream.avail_in = (uInt)((char*)defstream.next_out - b); // size of input
+//   // infstream.avail_in = 50;
+//   // infstream.next_in = (Bytef *)b; // input char array
+//   // infstream.avail_out = (uInt)sizeof(c); // size of output
+//   // infstream.next_out = (Bytef *)c; // output char array
+
+//   // // the actual DE-compression work.
+//   // inflateInit(&infstream);
+//   // inflate(&infstream, Z_NO_FLUSH);
+//   // inflateEnd(&infstream);
+// }
 
 bool
 PointToPointNetDevice::SupportsSendFrom (void) const

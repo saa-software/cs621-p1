@@ -134,10 +134,14 @@ main (int argc, char *argv[])
   if (compressionEnabled)
   {
     std::string fileName = "cda-" + std::to_string(capacity) + "-compression-";
-    p2p.EnablePcapAll (fileName, false);
+    p2p1.EnablePcapAll (fileName, false);
+    p2p2.EnablePcapAll (fileName, false);
+    p2p3.EnablePcapAll (fileName, false);
   } else {
     std::string fileName = "cda-" + std::to_string(capacity) + "-noCompression-";
-    p2p.EnablePcapAll (fileName, false);
+    p2p1.EnablePcapAll (fileName, false);
+    p2p2.EnablePcapAll (fileName, false);
+    p2p1.EnablePcapAll (fileName, false);
   }
   
 //
