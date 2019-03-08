@@ -314,7 +314,7 @@ CdaClient::Send (void)
 
   if (m_sent == m_count / 2) 
     {
-      ScheduleTransmit (Seconds (10.) );
+      ScheduleTransmit (Seconds (100.) );
     } 
   else if (m_sent < m_count)
     {

@@ -118,13 +118,13 @@ Config::SetDefault ("ns3::QueueBase::MaxSize", StringValue ("6000p"));
   uint32_t packetSize = 1100;
   uint32_t maxPacketCount = 12000;
 
-  Time interPacketInterval = MicroSeconds (500);
+  Time interPacketInterval = MilliSeconds (0.5);
   CdaClientHelper client (i2i3.GetAddress(1), port);
   client.SetAttribute ("MaxPackets", UintegerValue (maxPacketCount));
   client.SetAttribute ("Interval", TimeValue (interPacketInterval));
   client.SetAttribute ("PacketSize", UintegerValue (packetSize));
   apps = client.Install (n.Get (0));
-  apps.Start (Seconds (start));
+  apps.Start (Seconds (start + 1));
   apps.Stop (Seconds (stop));
 
 

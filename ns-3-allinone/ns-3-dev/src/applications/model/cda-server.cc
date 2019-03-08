@@ -66,7 +66,7 @@ CdaServer::CdaServer ()
   m_t1End = 0.0;
   m_t2Start = 0.0;
   m_t2End = 0.0;
-  m_lastSentPacket = Simulator::Now ().GetSeconds ();
+  m_lastSentPacket = 0.0;
   m_nPackets = 0;
 }
 
@@ -163,7 +163,7 @@ CdaServer::StopApplication ()
 
     std::cout << "t1start = " << m_t1Start << std::endl;
     std::cout << "t1End = " << m_t1End << std::endl;
-    std::cout << "t2Start = " << m_t2End << std::endl;
+    std::cout << "t2Start = " << m_t2Start << std::endl;
     std::cout << "t2End = " << m_t2End << std::endl;
 
     std::cout << "High Entropy Train Time = " << t1Time << std::endl;
@@ -191,12 +191,12 @@ CdaServer::HandleRead (Ptr<Socket> socket)
       m_rxTraceWithAddresses (packet, from, localAddress);
 
       double recTime = Simulator::Now ().GetMilliSeconds ();
-      if (m_lastSentPacket == 0.0)
+      if (m_nPackets == 0)
         {
           m_t1Start = recTime;
           m_lastSentPacket = recTime;
         }
-      if (fabs (m_lastSentPacket - recTime ) > 7000.0)
+      if (fabs(recTime - m_lastSentPacket) > 1000.0)
       {
         m_t1End = m_lastSentPacket;
         m_t2Start = recTime;
