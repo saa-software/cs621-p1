@@ -484,7 +484,9 @@ PointToPointNetDevice::Receive (Ptr<Packet> packet)
   uint16_t protocol = 0;
 
   printf ("recv packet size %d\n", packet->GetSize ());
-
+  PppHeader ppp_o;
+  packet->PeekHeader (ppp_o);
+  printf("recv protocol: %d\n", ppp_o.GetProtocol ());
   if (m_receiveErrorModel && m_receiveErrorModel->IsCorrupt (packet))
     {
       //
@@ -504,55 +506,79 @@ PointToPointNetDevice::Receive (Ptr<Packet> packet)
       m_promiscSnifferTrace (packet);
       m_phyRxEndTrace (packet);
 
+
+
+      if (m_compressionEnabled == 1)
+        {
+            printf ("########################## DECOMPRESS ##########################\n");
+            PppHeader ppp;
+            packet->RemoveHeader (ppp);
+
+            uLongf BUFFERSIZE = 10000;
+            uint8_t dest[BUFFERSIZE];
+            u_int8_t *src = (u_int8_t *) &packet;
+            // uint8_t *src[packet->GetSize ()];
+            // packet->Serialize(*src, packet->GetSize ());
+            uLongf srcSize = packet->GetSize ();
+            uncompress (dest, &BUFFERSIZE, src, srcSize);
+            // std::cout << "value: " << (int)*dest << std::endl;
+            // packet->Serialize (dest, BUFFERSIZE);
+            // packet = Create<Packet> (dest, BUFFERSIZE);
+      //     // printf ("COMPRESSION ENABLED RECR  %d\n", m_compressionEnabled);
+      //     // printf ("Packet size pre:          %d\n", packet->GetSize ());
+          // PppHeader ppp;
+          // packet->RemoveHeader (ppp);
+          // printf("protocol recv: %d\n", ppp.GetProtocol ());
+          // ppp.SetProtocol (0x0021);
+          // packet->AddHeader (ppp);
+          // PppHeader ppp2;
+          // packet->PeekHeader (ppp2);
+          // printf("protocol recv2: %d\n", ppp2.GetProtocol ());
+      //     // printf ("Recv protocol:            %d\n", ppp.GetProtocol ());
+      //     // printf ("Packet size post:         %d\n", packet->GetSize ());
+      //     if (ppp.GetProtocol () == 0x4021)
+      //       {
+      //         packet->RemoveHeader (ppp);
+
+      //         packet->RemoveHeader (ppp);
+      //         
+
+
+      //         uLongf destSize = BUFFERSIZE;
+
+      //         // dst, dstsize, src, srcsize
+      //         
+      //         printf ("dest size: %lu\n", destSize);
+
+      //         // printf ("Incoming Packet Size: %d\n", packet->GetSize ());
+      //         // u_int8_t* data = DecompressPacket (packet);
+      //         // packet = Create<Packet> (dest, destSize);
+      //         packet->Serialize (dest, destSize);
+      //         printf ("packet size %d\n", packet->GetSize ());
+      //         PppHeader ppptest;
+      //         packet->PeekHeader (ppptest);
+      //         printf ("protocol: %d\n", ppptest.GetProtocol ());
+      //         // printf ("Packet size:          %d\n", packet->GetSize ());
+      //         // PppHeader ppp2;
+      //         // packet->PeekHeader (ppp2);
+      //         // printf ("Post DECOMPRESS proto: %d\n", ppp2.GetProtocol ());
+      //         // packet->RemoveHeader (ppp2);
+      //         // ppp.SetProtocol (0x0021);
+      //         // packet->AddHeader (ppp);
+      //       }
+        }
+      // else
+      //   {
+
       //
       // Trace sinks will expect complete packets, not packets without some of the
       // headers.
       //
       Ptr<Packet> originalPacket = packet->Copy ();
+      // PppHeader pppOrig;
+      // originalPacket->PeekHeader (pppOrig);
+      // printf("ppporig protocol %d\n", pppOrig.GetProtocol ());
 
-      if (m_compressionEnabled == 1)
-        {
-          // printf ("COMPRESSION ENABLED RECR  %d\n", m_compressionEnabled);
-          // printf ("Packet size pre:          %d\n", packet->GetSize ());
-          PppHeader ppp;
-          packet->RemoveHeader (ppp);
-          // printf ("Recv protocol:            %d\n", ppp.GetProtocol ());
-          // printf ("Packet size post:         %d\n", packet->GetSize ());
-          if (ppp.GetProtocol () == 0x4021)
-            {
-              packet->RemoveHeader (ppp);
-              // printf ("########################## DECOMPRESS ##########################\n");
-              packet->RemoveHeader (ppp);
-              uLongf BUFFERSIZE = 10000;
-              uint8_t dest[BUFFERSIZE];
-
-              u_int8_t *src = (u_int8_t *) &packet;
-              uLongf srcSize = packet->GetSize ();
-              uLongf destSize = BUFFERSIZE;
-
-              // dst, dstsize, src, srcsize
-              uncompress (dest, &destSize, src, srcSize);
-              printf ("dest size: %lu\n", destSize);
-
-              // printf ("Incoming Packet Size: %d\n", packet->GetSize ());
-              // u_int8_t* data = DecompressPacket (packet);
-              // packet = Create<Packet> (dest, destSize);
-              packet->Serialize (dest, destSize);
-              printf ("packet size %d\n", packet->GetSize ());
-              PppHeader ppptest;
-              packet->PeekHeader (ppptest);
-              printf ("protocol: %d\n", ppptest.GetProtocol ());
-              // printf ("Packet size:          %d\n", packet->GetSize ());
-              // PppHeader ppp2;
-              // packet->PeekHeader (ppp2);
-              // printf ("Post DECOMPRESS proto: %d\n", ppp2.GetProtocol ());
-              // packet->RemoveHeader (ppp2);
-              // ppp.SetProtocol (0x0021);
-              // packet->AddHeader (ppp);
-            }
-        }
-      else
-        {
           //
           // Strip off the point-to-point protocol header and forward this packet
           // up the protocol stack.  Since this is a simple point-to-point link,
@@ -560,7 +586,7 @@ PointToPointNetDevice::Receive (Ptr<Packet> packet)
           // normal receive callback sees.
           //
           ProcessHeader (packet, protocol);
-        }
+        // }
 
       if (!m_promiscCallback.IsNull ())
         {
@@ -570,7 +596,7 @@ PointToPointNetDevice::Receive (Ptr<Packet> packet)
         }
       m_macRxTrace (originalPacket);
       m_rxCallback (this, packet, protocol, GetRemote ());
-      printf ("HERE\n");
+      // printf ("HERE\n");
     }
 }
 
@@ -582,7 +608,12 @@ PointToPointNetDevice::Send (Ptr<Packet> packet, const Address &dest, uint16_t p
   NS_LOG_LOGIC ("UID is " << packet->GetUid ());
 
   printf ("send packet size %d\n", packet->GetSize ());
-
+  PppHeader ppp_o;
+  packet->PeekHeader (ppp_o);
+  printf("send protocol: %d\n", ppp_o.GetProtocol ());
+  // printf("packet %s\n",packet->ToString ());
+  // std::cout << "Follow this command: " << packet->ToString ();
+  // printf("\n");
   //
   // If IsLinkUp() is false it means there is no channel to send any packet
   // over so we just hit the drop trace on the packet and return an error.
@@ -595,47 +626,73 @@ PointToPointNetDevice::Send (Ptr<Packet> packet, const Address &dest, uint16_t p
 
   if (m_compressionEnabled == 1)
     {
-      // PppHeader ppp;
-      // packet->PeekHeader (ppp);
+      printf ("##########################  COMPRESS  ##########################\n");
+      PppHeader ppp;
+      ppp.SetProtocol (0x4021);
+      packet->AddHeader (ppp);
 
-      // if (ppp.GetProtocol () == 0x4500)
-      //   {
-      //     PppHeader ppp2;
-      //     ppp2.SetProtocol (0x0021);
-      //   }
-      // else
-        // {
-          uLongf BUFFERSIZE = 1024;
-          u_int8_t dest[BUFFERSIZE];
-          // u_int8_t buffer = (u_int8_t *) &packet;
-          uint8_t *buffer = new uint8_t[packet->GetSize ()]; 
-          printf ("uffer size: %lu\n", sizeof(buffer));
-          // packet->CopyData (buffer, packet->GetSize ()); 
-          // u_int8_t src[BUFFERSIZE];
-          // u_int32_t srcSize = packet->GetSize ();
-          // packet->Serialize (src, srcSize);
-          uLongf destSize = BUFFERSIZE;
+      uLongf BUFFERSIZE = 10000;
+      uint8_t dest[BUFFERSIZE];
+      uLongf destSize = BUFFERSIZE;
+      uint8_t *src = (u_int8_t *) &packet;
+      // u_int8_t src[BUFFERSIZE];
+      // u_int32_t srcSize = packet->GetSize ();
+      compress (dest, &destSize, src, packet->GetSize ());
+      Ptr<Packet> compPacket = Create<Packet> (dest, destSize);
+      packet->RemoveAtEnd (1024);
+      packet->AddAtEnd (compPacket);
+      PppHeader ppp2;
+      packet->PeekHeader (ppp);
+      printf("proto %d\n", ppp2.GetProtocol ());
 
-          // dst, dstsize, src, srcsize
-          compress (dest, &destSize, buffer, packet->GetSize ());
-          printf ("dest size: %lu\n", destSize);
+  //     // if (ppp.GetProtocol () == 0x4500)
+  //     //   {
+  //     //     PppHeader ppp2;
+  //     //     ppp2.SetProtocol (0x0021);
+  //     //   }
+  //     // else
+  //       // {
+          // uLongf BUFFERSIZE = 1024;
+          // uint8_t dest[BUFFERSIZE];
+          // uint8_t *buffer = (u_int8_t *) &packet;
+          // uint8_t *buffer = new uint8_t[packet->GetSize ()]; 
+          // printf ("buffer size: %lu\n", sizeof(buffer));
+          // printf ("buffer size: %lu\n", sizeof(buffer)/sizeof(uint8_t));
+          // packet->CopyData (buffer, packet->GetSize ());
+          // printf ("buffer size: %lu\n", sizeof(buffer));
+          // printf ("buffer size: %lu\n", sizeof(buffer)/sizeof(uint8_t));
+  //         // u_int8_t src[BUFFERSIZE];
+  //         // u_int32_t srcSize = packet->GetSize ();
+  //         // packet->Serialize (src, srcSize);
+          // uLongf destSize = BUFFERSIZE;
 
-          packet = Create<Packet> (dest, destSize);
-          printf ("packet size %d\n", packet->GetSize ());
-          PppHeader ppp2;
+  //         // dst, dstsize, src, srcsize
+          // compress (dest, &destSize, buffer, packet->GetSize ());
+          // printf ("dest size: %lu\n", destSize);
 
-          ppp2.SetProtocol (0x4021);
-          packet->AddHeader (ppp2);
-        // }
+          // packet = Create<Packet> (dest, destSize);
+          // std::cout << "Follow this command: " << packet->ToString ();
+          // printf("\n");
+  //         printf ("packet size %d\n", packet->GetSize ());
+          // PppHeader ppp2;
+          // packet->PeekHeader (ppp2);
+          // ppp2.SetProtocol (0x4021);
+          // packet->AddHeader (ppp2);
+          // PppHeader ppptest;
+          // packet->PeekHeader (ppptest);
+          // printf("protocol send: %d\n", ppptest.GetProtocol ());
+          // std::cout << "Follow this command: " << packet->ToString ();
+          // printf("\n");
+  //       // }
     }
-  else
-    {
+  // else
+  //   {
       //
       // Stick a point to point protocol header on the packet in preparation for
       // shoving it out the door.
       //
       AddHeader (packet, protocolNumber);
-    }
+    // }
 
   m_macTxTrace (packet);
 
@@ -851,6 +908,8 @@ PointToPointNetDevice::PppToEther (uint16_t proto)
     {
     case 0x0021:
       return 0x0800; //IPv4
+    case 0x4021:
+      return 0x0800;
     case 0x0057:
       return 0x86DD; //IPv6
     default:
