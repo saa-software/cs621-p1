@@ -586,6 +586,9 @@ PointToPointNetDevice::Send (Ptr<Packet> packet, const Address &dest, uint16_t p
       else if (m_compressionEnabled == 1)
         {
           printf ("##########################  COMPRESS  ##########################\n");
+          PppHeader ppp3;
+          ppp3.SetProtocol (0x0021);
+          packet->AddHeader (ppp3);
           packet = CompressPacket (packet);
           PppHeader ppp2;
           // packet->RemoveHeader (ppp2);
@@ -674,16 +677,22 @@ PointToPointNetDevice::SetPromiscReceiveCallback (NetDevice::PromiscReceiveCallb
 Ptr<Packet>
 PointToPointNetDevice::CompressPacket (Ptr<Packet> packet)
 {
+  PppHeader pH3;
+  packet->PeekHeader(pH3);
+  printf ("RESULT BEFORE COMPRESSION: %d\n", pH3.GetProtocol ());
 
   uint32_t destSize = 10000;
-  u_int32_t dataSize = packet->GetSize ();
+  u_int32_t dataSize = packet->GetSize();
   // uint8_t* data =(uint8_t*) malloc(packet->GetSize());
   // memcpy(data, (uint8_t *) &packet, dataSize );
-  uint8_t data[dataSize];
-  uint8_t* data_ptr = data;
-  memcpy(data_ptr, (uint8_t *) &packet, dataSize);
-  printf("data: %u\n", *data);
+//  uint8_t data[dataSize];
+  uint8_t* data_ptr = new uint8_t[packet->GetSize()];
+  packet->CopyData(data_ptr, packet->GetSize());
+  // memcpy(data_ptr, packet->m_buffer, dataSize);
+  //printf("data: %d\n", *data);
+//  std::cout << "data:" << unsigned(*data) << std::endl;
 
+  //Ptr<Packet> copyPck = packet->Copy();
   //std::vector<uint8_t> buffer;
 
   const size_t BUFSIZE = 10000;
@@ -732,32 +741,53 @@ PointToPointNetDevice::CompressPacket (Ptr<Packet> packet)
   Ptr<Packet> compPacket = Create<Packet> (temp_buf_ptr, destSize);
   PppHeader pH;
   compPacket->PeekHeader(pH);
-  printf ("COMPRESS: %d\n", pH.GetProtocol ());
+  printf ("RESULT AFTER COMPRESSION: %d\n", pH.GetProtocol ());
+//  m_currentPkt = compPacket;
   return compPacket;
 
+/**Trying Decompression inside compress func
+  u_int32_t dataSize2 = compPacket->GetSize();
+  uint8_t data2[dataSize2];
+  uint8_t* data_ptr2 = data2;
+  packet->CopyData(data_ptr2, dataSize2);
+
+  uint8_t temp_buffer2[BUFSIZE];
+  uint8_t* temp_buf_ptr2 = temp_buffer2;
+
+  z_stream infstream;
+  infstream.zalloc = 0;
+  infstream.zfree = 0;
+  // setup "b" as the input and "c" as the compressed output
+  // infstream.avail_in = (uInt)((char*)defstream.next_out - b); // size of input
+  infstream.avail_in = dataSize2;
+  infstream.next_in = data_ptr2; // input char array
+  infstream.avail_out = BUFSIZE; // size of output
+  infstream.next_out = temp_buf_ptr2; // output char array
+
+  //the actual DE-compression work.
+  inflateInit (&infstream);
+  inflate (&infstream, Z_FINISH);
+  // if(infstream.avail_out == 0) {
+  //   printf("ERROR!");
+  // }
+  //NS_ASSERT(res == Z_STREAM_END);
+  destSize = infstream.total_out;
+  //printf("hi %d\n", destSize);
+  std::cout << "total out size:" << unsigned(destSize) << std::endl;
+  inflateEnd (&infstream);
+  printf("packet size in decom: %d\n", packet->GetSize());
+
+
+
+
+  Ptr<Packet> compPacket2 = Create<Packet> (temp_buf_ptr2, destSize);
+  PppHeader pH2;
+  compPacket2->PeekHeader(pH2);
+  printf ("RESULT AFTER DECOMPRESSION: %d\n", pH2.GetProtocol ());
+  return compPacket;
+*/
 }
-//
-// Ptr<Packet>
-// PointToPointNetDevice::CompressPacket (Ptr<Packet> packet)
-// {
-//
-//   const size_t BUFSIZE = 1052;
-//   uint8_t temp_buffer[BUFSIZE];
-//
-//   u_int8_t *data;
-//   data = (u_int8_t *) &packet;
-//   u_int32_t srcSize = packet->GetSize ();
-//   uLongf dstSize = 1052;
-//
-//   compress(temp_buffer, &dstSize, data, srcSize);
-//
-//   printf ("dstSize %lu\n", dstSize);
-//   printf ("buffer data:\n %u\n", *temp_buffer);
-//
-//   Ptr<Packet> compPacket = Create<Packet> (temp_buffer, dstSize);
-//   packet = compPacket;
-//   return packet;
-// }
+
 
 Ptr<Packet>
 PointToPointNetDevice::DecompressPacket (Ptr<Packet> packet)
@@ -766,29 +796,26 @@ PointToPointNetDevice::DecompressPacket (Ptr<Packet> packet)
   // printf ("Size of packet: %d\n", packet->GetSize ());
   PppHeader pH;
   packet->PeekHeader(pH);
-  printf ("DECOMPRESS: %d\n", pH.GetProtocol ());
+  printf ("DECOMPRESS before removing header: %d\n", pH.GetProtocol ());
   packet->RemoveHeader(pH);
   PppHeader pH1;
   packet->PeekHeader(pH1);
-  printf ("DECOMPRESS: %d\n", pH1.GetProtocol ());
+  printf ("DECOMPRESS after removing e: %d\n", pH1.GetProtocol ());
+
+
   const size_t BUFSIZE = 10000;
   uint8_t temp_buffer[BUFSIZE];
   uint8_t* temp_buf_ptr = temp_buffer;
 
   uint32_t destSize = 10000;
   u_int32_t dataSize = packet->GetSize ();
-  uint8_t data[dataSize];
-  uint8_t* data_ptr = data;
-  memcpy(data_ptr, (uint8_t *) &packet, dataSize);
-  printf("data: %u\n", *data);
 
-  // uint8_t* readBuffer = (uint8_t*) malloc(dataSize);
-  // memset(readBuffer, 2, dataSize);
+  uint8_t* data_ptr = new uint8_t[packet->GetSize()];
+  packet->CopyData(data_ptr, packet->GetSize());
+  //memcpy(data_ptr, (uint8_t *) &packet, dataSize);
+  //printf("data: %u\n", *data);
+//  std::cout << "data:" << unsigned(*data) << std::endl;
 
-  // u_int8_t *data;
-  // data = (u_int8_t *) &packet;
-
-//  uLongf dstSize = 10000;
 
   z_stream infstream;
   infstream.zalloc = 0;
@@ -816,6 +843,7 @@ PointToPointNetDevice::DecompressPacket (Ptr<Packet> packet)
   //printf ("buffer data:\n %u\n", *temp_buffer);
 
   Ptr<Packet> decompPacket = Create<Packet> (temp_buf_ptr , destSize);
+//  m_currentPkt = decompPacket;
   return decompPacket;
 
 }
@@ -902,33 +930,33 @@ PointToPointNetDevice::EtherToPpp (uint16_t proto)
 uint16_t
 PointToPointNetDevice::CompressionPppToEther (uint16_t proto)
 {
-  // NS_LOG_FUNCTION_NOARGS ();
-  // switch (proto)
-  //   {
-  //   case 0x0021:
-  //     return 0x0800; //IPv4
-  //   case 0x0057:
-  //     return 0x86DD; //IPv6
-  //   default:
-  //     NS_ASSERT_MSG (false, "PPP Protocol number not defined!");
-  //   }
-  return 0x0800;
+  NS_LOG_FUNCTION_NOARGS ();
+  switch (proto)
+    {
+    case 0x0021:
+      return 0x0800; //IPv4
+    case 0x0057:
+      return 0x86DD; //IPv6
+    default:
+      NS_ASSERT_MSG (false, "PPP Protocol number not defined!");
+    }
+
 }
 
 uint16_t
 PointToPointNetDevice::CompressionEtherToPpp (uint16_t proto)
 {
-  // NS_LOG_FUNCTION_NOARGS ();
-  // switch (proto)
-  //   {
-  //   case 0x0800:
-  //     return 0x0021; //IPv4
-  //   case 0x86DD:
-  //     return 0x0057; //IPv6
-  //   default:
-  //     NS_ASSERT_MSG (false, "PPP Protocol number not defined!");
-  //   }
-  return 0x4021;
+  NS_LOG_FUNCTION_NOARGS ();
+  switch (proto)
+    {
+    case 0x0800:
+      return 0x0021; //IPv4
+    case 0x86DD:
+      return 0x0057; //IPv6
+    default:
+      NS_ASSERT_MSG (false, "PPP Protocol number not defined!");
+    }
+
 }
 
 } // namespace ns3
