@@ -508,7 +508,12 @@ PointToPointNetDevice::Receive (Ptr<Packet> packet)
 
       if (m_compressionEnabled == 1)
         {
-          // printf ("########################## DECOMPRESS ##########################\n");
+          //printf ("########################## DECOMPRESS ##########################\n");
+          packet =DecompressPacket(packet);
+          PppHeader ppp;
+          packet->PeekHeader(ppp);
+        //  printf("Header after decompression: %d\n", ppp.GetProtocol());
+          /** FROM HERE
           PppHeader ppp;
           packet->RemoveHeader (ppp);
 
@@ -519,6 +524,8 @@ PointToPointNetDevice::Receive (Ptr<Packet> packet)
           // packet->Serialize(*src, packet->GetSize ());
           uLongf srcSize = packet->GetSize ();
           uncompress (dest, &BUFFERSIZE, src, srcSize);
+          TO HERE**/
+
           // std::cout << "value: " << (int)*dest << std::endl;
           // packet->Serialize (dest, BUFFERSIZE);
           // packet = Create<Packet> (dest, BUFFERSIZE);
@@ -587,11 +594,13 @@ PointToPointNetDevice::Receive (Ptr<Packet> packet)
 
       if (!m_promiscCallback.IsNull ())
         {
-          m_macPromiscRxTrace (originalPacket);
+          //m_macPromiscRxTrace (originalPacket);
+          m_macPromiscRxTrace (packet);
           m_promiscCallback (this, packet, protocol, GetRemote (), GetAddress (),
                              NetDevice::PACKET_HOST);
         }
-      m_macRxTrace (originalPacket);
+    //  m_macRxTrace (originalPacket);
+      m_macRxTrace (packet);
       m_rxCallback (this, packet, protocol, GetRemote ());
       // printf ("HERE\n");
     }
@@ -623,7 +632,15 @@ PointToPointNetDevice::Send (Ptr<Packet> packet, const Address &dest, uint16_t p
 
   if (m_compressionEnabled == 1)
     {
-      // printf ("##########################  COMPRESS  ##########################\n");
+    //  printf ("##########################  COMPRESS  ##########################\n");
+      PppHeader ppp;
+      ppp.SetProtocol (0x0021);
+      packet->AddHeader (ppp);
+      packet = CompressPacket(packet);
+      PppHeader ppp2;
+      ppp2.SetProtocol(0x4021);
+      packet->AddHeader(ppp2);
+      /** FROM HERE
       PppHeader ppp;
       ppp.SetProtocol (0x4021);
       packet->AddHeader (ppp);
@@ -640,6 +657,7 @@ PointToPointNetDevice::Send (Ptr<Packet> packet, const Address &dest, uint16_t p
       packet->AddAtEnd (compPacket);
       PppHeader ppp2;
       packet->PeekHeader (ppp);
+      TO HERE**/
       // printf("proto %d\n", ppp2.GetProtocol ());
 
       //     // if (ppp.GetProtocol () == 0x4500)
@@ -682,14 +700,15 @@ PointToPointNetDevice::Send (Ptr<Packet> packet, const Address &dest, uint16_t p
       // printf("\n");
       //       // }
     }
-  // else
-  //   {
+    //ELSE SHOULD BE DELETED?
+  else
+    {
   //
   // Stick a point to point protocol header on the packet in preparation for
   // shoving it out the door.
   //
   AddHeader (packet, protocolNumber);
-  // }
+  }
 
   m_macTxTrace (packet);
 
@@ -758,63 +777,64 @@ PointToPointNetDevice::SetPromiscReceiveCallback (NetDevice::PromiscReceiveCallb
   m_promiscCallback = cb;
 }
 
-// Ptr<Packet>
-// PointToPointNetDevice::CompressPacket (Ptr<Packet> packet)
-// {
+Ptr<Packet>
+PointToPointNetDevice::CompressPacket (Ptr<Packet> packet)
+{
 
-//   uint32_t destSize;
-//   char *data;
-//   data = (char *) &packet;
-//   u_int32_t dataSize = packet->GetSize ();
+  uint32_t destSize = 10000;
+  uint32_t dataSize = packet->GetSize ();
+  uint8_t* data_ptr = new uint8_t[packet->GetSize()];
+  packet->CopyData(data_ptr, packet->GetSize());
 
-//   std::vector<uint8_t> buffer;
+  //std::vector<uint8_t> buffer;
 
-//   const size_t BUFSIZE = 1100;
-//   uint8_t temp_buffer[BUFSIZE];
+  const size_t BUFSIZE = 10000;
+  uint8_t temp_buffer[BUFSIZE];
+  uint8_t* temp_buf_ptr = temp_buffer;
 
-//   z_stream strm;
-//   strm.zalloc = 0;
-//   strm.zfree = 0;
-//   strm.next_in = reinterpret_cast<uint8_t *> (data);
-//   strm.avail_in = dataSize;
-//   strm.next_out = temp_buffer;
-//   strm.avail_out = BUFSIZE;
+  z_stream strm;
+  strm.zalloc = 0;
+  strm.zfree = 0;
+  strm.next_in = data_ptr;
+  strm.avail_in = dataSize;
+  strm.next_out = temp_buf_ptr;
+  strm.avail_out = BUFSIZE;
 
-//   deflateInit (&strm, Z_BEST_COMPRESSION);
+  deflateInit (&strm, Z_BEST_COMPRESSION);
 
-//   while (strm.avail_in != 0)
-//     {
-//       int res = deflate (&strm, Z_NO_FLUSH);
-//       NS_ASSERT (res == Z_OK);
-//       if (strm.avail_out == 0)
-//         {
-//           //  buffer.insert(buffer.end(), temp_buffer, temp_buffer + BUFSIZE);
-//           //  strm.next_out = temp_buffer;
-//           //  strm.avail_out = BUFSIZE;
-//         }
-//     }
+  while (strm.avail_in != 0)
+    {
+      int res = deflate (&strm, Z_NO_FLUSH);
+      NS_ASSERT (res == Z_OK);
+      if (strm.avail_out == 0)
+        {
+          //  buffer.insert(buffer.end(), temp_buffer, temp_buffer + BUFSIZE);
+          //  strm.next_out = temp_buffer;
+          //  strm.avail_out = BUFSIZE;
+        }
+    }
 
-//   int deflate_res = Z_OK;
-//   while (deflate_res == Z_OK)
-//     {
-//       // if (strm.avail_out == 0)
-//       // {
-//       //  buffer.insert(buffer.end(), temp_buffer, temp_buffer + BUFSIZE);
-//       //  strm.next_out = temp_buffer;
-//       //  strm.avail_out = BUFSIZE;
-//       // }
-//       deflate_res = deflate (&strm, Z_FINISH);
-//     }
+  int deflate_res = Z_OK;
+  while (deflate_res == Z_OK)
+    {
+      // if (strm.avail_out == 0)
+      // {
+      //  buffer.insert(buffer.end(), temp_buffer, temp_buffer + BUFSIZE);
+      //  strm.next_out = temp_buffer;
+      //  strm.avail_out = BUFSIZE;
+      // }
+      deflate_res = deflate (&strm, Z_FINISH);
+    }
 
-//   NS_ASSERT (deflate_res == Z_STREAM_END);
-//   // buffer.insert(buffer.end(), temp_buffer, temp_buffer + BUFSIZE - strm.avail_out);
-//   destSize = strm.total_out;
-//   deflateEnd (&strm);
+  NS_ASSERT (deflate_res == Z_STREAM_END);
+  // buffer.insert(buffer.end(), temp_buffer, temp_buffer + BUFSIZE - strm.avail_out);
+  destSize = strm.total_out;
+  deflateEnd (&strm);
 
-//   Ptr<Packet> compPacket = Create<Packet> (temp_buffer, destSize);
+  Ptr<Packet> compPacket = Create<Packet> (temp_buf_ptr, destSize);
 
-//   return compPacket;
-// }
+  return compPacket;
+}
 
 // u_int8_t*
 // PointToPointNetDevice::CompressPacket (Ptr<Packet> packet)
@@ -879,29 +899,44 @@ PointToPointNetDevice::SetPromiscReceiveCallback (NetDevice::PromiscReceiveCallb
 //   // printf("b: %s", b);
 // }
 
-// void
-// PointToPointNetDevice::DecompressPacket (Packet p)
-// {
+Ptr<Packet>
+PointToPointNetDevice::DecompressPacket (Ptr<Packet> packet)
+{
+  //remove 4021 header
+  PppHeader pH;
+  packet->RemoveHeader(pH);
 
-//   // const char b[50] = {};
-//   // const char c[50] = {};
+  const size_t BUFSIZE = 10000;
+  uint8_t temp_buffer[BUFSIZE];
+  uint8_t* temp_buf_ptr = temp_buffer;
 
-//   // z_stream infstream;
-//   // infstream.zalloc = Z_NULL;
-//   // infstream.zfree = Z_NULL;
-//   // infstream.opaque = Z_NULL;
-//   // // setup "b" as the input and "c" as the compressed output
-//   // // infstream.avail_in = (uInt)((char*)defstream.next_out - b); // size of input
-//   // infstream.avail_in = 50;
-//   // infstream.next_in = (Bytef *)b; // input char array
-//   // infstream.avail_out = (uInt)sizeof(c); // size of output
-//   // infstream.next_out = (Bytef *)c; // output char array
+  uint32_t destSize = 10000;
+  uint32_t dataSize = packet->GetSize();
 
-//   // // the actual DE-compression work.
-//   // inflateInit(&infstream);
-//   // inflate(&infstream, Z_NO_FLUSH);
-//   // inflateEnd(&infstream);
-// }
+  uint8_t* data_ptr = new uint8_t[packet->GetSize()];
+  packet->CopyData(data_ptr, dataSize);
+
+
+  z_stream infstream;
+  infstream.zalloc = Z_NULL;
+  infstream.zfree = Z_NULL;
+  // infstream.opaque = Z_NULL;
+  // setup "b" as the input and "c" as the compressed output
+  // infstream.avail_in = (uInt)((char*)defstream.next_out - b); // size of input
+  infstream.avail_in = dataSize;
+  infstream.next_in = data_ptr; // input char array
+  infstream.avail_out = BUFSIZE; // size of output
+  infstream.next_out = temp_buf_ptr; // output char array
+
+  // the actual DE-compression work.
+  inflateInit(&infstream);
+  inflate(&infstream, Z_NO_FLUSH);
+  destSize = infstream.total_out;
+  inflateEnd(&infstream);
+
+  Ptr<Packet> decompPacket = Create<Packet> (temp_buf_ptr, destSize);
+  return decompPacket;
+}
 
 bool
 PointToPointNetDevice::SupportsSendFrom (void) const
