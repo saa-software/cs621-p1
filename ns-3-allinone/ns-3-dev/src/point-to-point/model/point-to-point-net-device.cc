@@ -613,13 +613,8 @@ PointToPointNetDevice::Send (Ptr<Packet> packet, const Address &dest, uint16_t p
   NS_LOG_LOGIC ("p=" << packet << ", dest=" << &dest);
   NS_LOG_LOGIC ("UID is " << packet->GetUid ());
 
-  // printf ("send packet size %d\n", packet->GetSize ());
   PppHeader ppp_o;
   packet->PeekHeader (ppp_o);
-  // printf("send protocol: %d\n", ppp_o.GetProtocol ());
-  // printf("packet %s\n",packet->ToString ());
-  // std::cout << "Follow this command: " << packet->ToString ();
-  // printf("\n");
   //
   // If IsLinkUp() is false it means there is no channel to send any packet
   // over so we just hit the drop trace on the packet and return an error.
@@ -632,7 +627,6 @@ PointToPointNetDevice::Send (Ptr<Packet> packet, const Address &dest, uint16_t p
 
   if (m_compressionEnabled == 1)
     {
-    //  printf ("##########################  COMPRESS  ##########################\n");
       PppHeader ppp;
       ppp.SetProtocol (0x0021);
       packet->AddHeader (ppp);
@@ -640,78 +634,13 @@ PointToPointNetDevice::Send (Ptr<Packet> packet, const Address &dest, uint16_t p
       PppHeader ppp2;
       ppp2.SetProtocol(0x4021);
       packet->AddHeader(ppp2);
-      /** FROM HERE
-      PppHeader ppp;
-      ppp.SetProtocol (0x4021);
-      packet->AddHeader (ppp);
-
-      uLongf BUFFERSIZE = 10000;
-      uint8_t dest[BUFFERSIZE];
-      uLongf destSize = BUFFERSIZE;
-      uint8_t *src = (u_int8_t *) &packet;
-      // u_int8_t src[BUFFERSIZE];
-      // u_int32_t srcSize = packet->GetSize ();
-      compress (dest, &destSize, src, packet->GetSize ());
-      Ptr<Packet> compPacket = Create<Packet> (dest, destSize);
-      packet->RemoveAtEnd (1100);
-      packet->AddAtEnd (compPacket);
-      PppHeader ppp2;
-      packet->PeekHeader (ppp);
-      TO HERE**/
-      // printf("proto %d\n", ppp2.GetProtocol ());
-
-      //     // if (ppp.GetProtocol () == 0x4500)
-      //     //   {
-      //     //     PppHeader ppp2;
-      //     //     ppp2.SetProtocol (0x0021);
-      //     //   }
-      //     // else
-      //       // {
-      // uLongf BUFFERSIZE = 1024;
-      // uint8_t dest[BUFFERSIZE];
-      // uint8_t *buffer = (u_int8_t *) &packet;
-      // uint8_t *buffer = new uint8_t[packet->GetSize ()];
-      // printf ("buffer size: %lu\n", sizeof(buffer));
-      // printf ("buffer size: %lu\n", sizeof(buffer)/sizeof(uint8_t));
-      // packet->CopyData (buffer, packet->GetSize ());
-      // printf ("buffer size: %lu\n", sizeof(buffer));
-      // printf ("buffer size: %lu\n", sizeof(buffer)/sizeof(uint8_t));
-      //         // u_int8_t src[BUFFERSIZE];
-      //         // u_int32_t srcSize = packet->GetSize ();
-      //         // packet->Serialize (src, srcSize);
-      // uLongf destSize = BUFFERSIZE;
-
-      //         // dst, dstsize, src, srcsize
-      // compress (dest, &destSize, buffer, packet->GetSize ());
-      // printf ("dest size: %lu\n", destSize);
-
-      // packet = Create<Packet> (dest, destSize);
-      // std::cout << "Follow this command: " << packet->ToString ();
-      // printf("\n");
-      //         printf ("packet size %d\n", packet->GetSize ());
-      // PppHeader ppp2;
-      // packet->PeekHeader (ppp2);
-      // ppp2.SetProtocol (0x4021);
-      // packet->AddHeader (ppp2);
-      // PppHeader ppptest;
-      // packet->PeekHeader (ppptest);
-      // printf("protocol send: %d\n", ppptest.GetProtocol ());
-      // std::cout << "Follow this command: " << packet->ToString ();
-      // printf("\n");
-      //       // }
     }
-    //ELSE SHOULD BE DELETED?
-  else
-    {
   //
   // Stick a point to point protocol header on the packet in preparation for
   // shoving it out the door.
   //
   AddHeader (packet, protocolNumber);
-  }
-
   m_macTxTrace (packet);
-
   //
   // We should enqueue and dequeue the packet to hit the tracing hooks.
   //
