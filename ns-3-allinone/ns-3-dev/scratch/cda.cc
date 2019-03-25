@@ -28,7 +28,7 @@
 #include "ns3/ipv4-global-routing-helper.h"
 #include "ns3/queue.h"
 #include "ns3/drop-tail-queue.h"
-#include "json/json.h"
+#include "src/json/json.h"
 
 using namespace ns3;
 
@@ -38,14 +38,39 @@ int
 main (int argc, char *argv[])
 {
   // Read the json config file to get the compression protocol
+  // Json::Value root;
+  // Json::CharReaderBuilder rbuilder;
+  // std::ifstream file ("config.json");
+  // file >> root;
+  // const Json::Value CompressionProtocol = root["compression_protocol"];
   Json::Value root;
   Json::CharReaderBuilder rbuilder;
-  std::ifstream file ("config.json");
-  file >> root;
-  const Json::Value CompressionProtocol = root["compression_protocol"];
-  printf("%s", CompressionProtocol);
+  // Configure the Builder, then ...
+  std::string errs;
+  std::ifstream config_doc("scratch/config.json", std::ifstream::binary);
+  config_doc >> root;
+  // printf("1\n");
+  // bool parsingSuccessful = Json::parseFromStream (rbuilder, config_doc, &root, &errs);
+  Json::parseFromStream (rbuilder, config_doc, &root, &errs);
+  // printf("success: %d\n", parsingSuccessful);
+  // if (!parsingSuccessful)
+    // {
+      // report to the user the failure and their locations in the document.
+      // std::cout << "Failed to parse configuration\n" << errs;
+      // return 0;
+    // }
+  // printf("2\n");
+  // ...
+  Json::StreamWriterBuilder wbuilder;
+  // Configure the Builder, then ...
+  // std::string outputConfig = Json::writeString (wbuilder, root);
+  // std::cout << "JSON: " << outputConfig << std::endl;
+  const Json::Value outputCompressionProtocol = root["compression_protocol"];
+  std::string compressionProtocol = Json::writeString (wbuilder, outputCompressionProtocol);
+  std::cout << "COMPRESSION PROTO: " << compressionProtocol << std::endl;
+  int proto = stoi (compressionProtocol);
   // End json parsing
-
+  
   Config::SetDefault ("ns3::QueueBase::MaxSize", StringValue ("6000p"));
   //
   // Users may find it convenient to turn on explicit debugging
@@ -83,7 +108,7 @@ main (int argc, char *argv[])
   PointToPointHelper p2p2;
   p2p2.SetDeviceAttribute ("DataRate", StringValue (std::to_string (capacity) + "Mbps"));
   p2p2.SetDeviceAttribute ("CompressionEnabled", BooleanValue (compressionEnabled));
-  p2p2.SetDeviceAttribute ("CompressionProtocol", StringValue (""));
+  p2p2.SetDeviceAttribute ("CompressionProtocol", IntegerValue (proto));
 
   PointToPointHelper p2p3;
   p2p3.SetDeviceAttribute ("DataRate", StringValue ("8Mbps"));
