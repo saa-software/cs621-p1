@@ -531,14 +531,7 @@ PointToPointNetDevice::Receive (Ptr<Packet> packet)
       //
       Ptr<Packet> originalPacket = packet->Copy ();
 
-      //
-      // Strip off the point-to-point protocol header and forward this packet
-      // up the protocol stack.  Since this is a simple point-to-point link,
-      // there is no difference in what the promisc callback sees and what the
-      // normal receive callback sees.
-      //
       ProcessHeader (packet, protocol);
-
       if (!m_promiscCallback.IsNull ())
         {
           m_macPromiscRxTrace (packet);
@@ -587,6 +580,7 @@ PointToPointNetDevice::Send (Ptr<Packet> packet, const Address &dest, uint16_t p
       //
       AddHeader (packet, protocolNumber);
     }
+
   m_macTxTrace (packet);
   //
   // We should enqueue and dequeue the packet to hit the tracing hooks.
@@ -688,6 +682,7 @@ PointToPointNetDevice::CompressPacket (Ptr<Packet> packet)
     }
 
   NS_ASSERT (deflate_res == Z_STREAM_END);
+
   destSize = strm.total_out;
   deflateEnd (&strm);
 
