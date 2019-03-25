@@ -7,3 +7,7 @@
 ```
 - <capacity> is the capacity of the compression link in Mbps
 - <compressionEnabled> is whether the compression is enabled in the link or not
+
+### Add ons
+- Compression algorithms provided by [zlib](https://zlib.net/)
+- Json parsing from [JsonCPP](https://github.com/open-source-parsers/jsoncpp)
