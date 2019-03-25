@@ -196,6 +196,8 @@ public:
 
   virtual void SetCompressionEnabled (bool compressionEnabled);
 
+  virtual void SetCompressionProtocol (int compressionProtocol);
+
 protected:
   /**
    * \brief Handler for MPI receive event
@@ -468,6 +470,7 @@ private:
   Ptr<Packet> m_currentPkt; //!< Current packet processed
 
   bool m_compressionEnabled; //!< Whether to compress data or not
+  int m_compressionProtocol;
 
   /**
    * \brief PPP to Ethernet protocol number mapping
